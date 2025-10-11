@@ -7,6 +7,8 @@ import QuickActions from "./component/QuickActions";
 import Profile from "./component/Profile";
 import EmployeesTable from "./component/EmployeesTable";
 import Login from "./component/LogIn";
+import ScheduleInterview from "./component/Schedule Interview";
+import Documents from "./component/Documents";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -48,6 +50,10 @@ export default function App() {
             <Route path="/add" element={<AddEmployee />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/employees" element={<EmployeesTable />} />
+              <Route path="/schedule" element={<ScheduleInterview />} />
+              <Route path="/Documents" element={<Documents />} />
+
+
 
            
             <Route path="*" element={<Navigate to="/" />} />

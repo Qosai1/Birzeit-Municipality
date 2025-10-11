@@ -12,8 +12,8 @@ export default function QuickActions() {
         <IoPersonAddSharp /> Add New Employee
       </Link>
 
-      <Link to="/report" className="action-link report">
-        <TbReportAnalytics /> Generate Report
+      <Link to="/Documents" className="action-link report">
+        <TbReportAnalytics /> Documents
       </Link>
 
       <Link to="/employees" className="action-link view">

@@ -491,4 +491,152 @@ h5 {
 .edit-btn:hover {
   background-color: #1d4ed8;
 }
+/* schedule interview */
+.interview-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden; 
+}
 
+
+.interview-container h2 {
+  text-align: center;
+  color: #0073b1;
+}
+
+.subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+
+.interview-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap; 
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+input,
+select,
+textarea {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+}
+
+textarea {
+  resize: none;
+  height: 70px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.schedule-btn {
+  background-color: #0073b1;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.schedule-btn:hover {
+  background-color: #005f90;
+}
+
+.cancel-btn {
+  background-color: #ccc;
+  color: #333;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
+.table-title {
+  margin-top: 30px;
+  text-align: center;
+  color: #0073b1;
+}
+
+.interview-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  table-layout: fixed; 
+}
+
+.interview-table th,
+.interview-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  word-wrap: break-word; 
+}
+
+.interview-table th {
+  background-color: #0073b1;
+  color: white;
+}
+
+.interview-table tr:nth-child(even) {
+  background-color: #f8f9fa; 
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.no-data {
+  text-align: center;
+  color: gray;
+  font-style: italic;
+  margin-top: 10px;
+}
