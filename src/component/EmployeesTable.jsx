@@ -30,7 +30,7 @@ export default function EmployeesTable() {
           <tr>
             <th>#</th>
             <th>Full Name</th>
-            <th>Phone Number</th>
+            <th>nationalId</th>
             <th>Salary</th>
             <th>Actions</th>
           </tr>
@@ -41,7 +41,7 @@ export default function EmployeesTable() {
             <tr key={index}>
               <td>{index + 1}</td>
               <td>{emp.fullName}</td>
-              <td>{emp.phoneNumber}</td>
+              <td>{emp.nationalId}</td>
               <td>${emp.salary}</td>
               <td className="actions">
                 <button className="view-btn" >

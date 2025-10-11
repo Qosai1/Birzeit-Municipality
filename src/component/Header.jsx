@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import "../style.css"
 
-export default function Header() {
+export default function Header( {onLogout}) {
   return (
     <header className="header">
       <div className="logo">
@@ -17,7 +17,7 @@ export default function Header() {
         </Link>
       </nav>
 
-      <button className="logout-btn">Logout</button>
+      <button className="logout-btn"  onClick={onLogout}>Logout</button>
     </header>
   );
 }

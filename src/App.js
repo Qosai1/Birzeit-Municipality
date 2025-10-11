@@ -1,35 +1,59 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
 import Header from "./component/Header";
 import Details from "./component/details";
 import AddEmployee from "./component/AddEmployee";
 import QuickActions from "./component/QuickActions";
 import Profile from "./component/Profile";
 import EmployeesTable from "./component/EmployeesTable";
+import Login from "./component/LogIn";
 
 export default function App() {
-  return (<>
-  
-      <Header />
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              <Details />
-              <div className="dd">
-              <EmployeesTable/>
-              <QuickActions />
-            
-            </div>
-            </div>
-          }
-        />
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+    const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+  return (
+    <>
+   
+      {!isLoggedIn ? (
+        <Routes>
+          <Route path="*" element={<Login onLogin={handleLogin} />} />
+        </Routes>
+      ) : (
+        <>
+       
+          <Header onLogout={handleLogout}/>
 
- 
-        <Route path="/add" element={<AddEmployee />} />
-        <Route path="/profile" element={<Profile/>}/>
-      </Routes>
-  
-  </>);
+          <Routes>
+          
+            <Route
+              path="/"
+              element={
+                <div>
+                  <Details />
+                  <div className="dd">
+                    <EmployeesTable />
+                    <QuickActions />
+                  </div>
+                </div>
+              }
+            />
+
+          
+            <Route path="/add" element={<AddEmployee />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/employees" element={<EmployeesTable />} />
+
+           
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </>
+      )}
+    </>
+  );
 }

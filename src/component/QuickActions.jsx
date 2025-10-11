@@ -3,7 +3,6 @@ import { CgCalendarDates } from "react-icons/cg";
 import { IoPersonAddSharp } from "react-icons/io5";
 import { TbReportAnalytics } from "react-icons/tb";
 import { HiMiniUsers } from "react-icons/hi2";
-import AddEmployee from "./AddEmployee";
 import "../style.css";
 
 export default function QuickActions() {
