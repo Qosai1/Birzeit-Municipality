@@ -42,7 +42,7 @@ export default function EmployeesTable() {
               <td>{index + 1}</td>
               <td>{emp.fullName}</td>
               <td>{emp.nationalId}</td>
-              <td>${emp.salary}</td>
+              <td>{emp.salary}$</td>
               <td className="actions">
                 <button className="view-btn" >
                   View
