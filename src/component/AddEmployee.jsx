@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "../style.css";
 
 export default function AddEmployee() {
@@ -15,24 +15,6 @@ export default function AddEmployee() {
     salary: "",
     startDate: "",
   });
-
-
-  
-  // Fetch all employees when component mounts
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  // Function to fetch employees from API
-  const fetchEmployees = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/employees");
-      const data = await res.json();
-      setEmployees(data);
-    } catch (err) {
-      console.error("Failed to fetch employees:", err);
-    }
-  };
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -71,8 +53,6 @@ export default function AddEmployee() {
           startDate: "",
         });
 
-        // Refresh the employee list
-        fetchEmployees();
       } else {
         alert("Error: " + data.error);
       }

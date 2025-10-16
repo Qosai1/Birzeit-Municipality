@@ -5,9 +5,10 @@ import Details from "./component/details";
 import AddEmployee from "./component/AddEmployee";
 import QuickActions from "./component/QuickActions";
 import Profile from "./component/Profile";
-import EmployeesTable from "./component/EmployeesTable";
+import EmployeesTableDB from "./component/EmployeesTableDB";
 import Login from "./component/LogIn";
 import ScheduleInterview from "./component/Schedule Interview";
+import EmployeesTable from "./component/EmployeesTable";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,7 +39,7 @@ export default function App() {
                 <div>
                   <Details />
                   <div className="dd">
-                    <EmployeesTable />
+                    <EmployeesTableDB />
                     <QuickActions />
                   </div>
                 </div>

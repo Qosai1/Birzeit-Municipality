@@ -1,84 +1,128 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+
 import "../style.css";
 
 export default function EmployeesTable() {
-  // State to hold all employees fetched from API
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Fetch employees from API when component mounts
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/employees"); // API endpoint
-        if (!res.ok) {
-          throw new Error("Failed to fetch employees");
-        }
-        const data = await res.json();
-        setEmployees(data);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchEmployees();
   }, []);
 
-  // Show loading state
-  if (loading) {
-    return <div className="employees-container">Loading employees...</div>;
-  }
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/employees");
+      const data = await res.json();
+      setEmployees(data);
+      setFilteredEmployees(data);
+    } catch (err) {
+      console.error("Failed to fetch employees:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Show error state
-  if (error) {
-    return <div className="employees-container">Error: {error}</div>;
-  }
+  
+  const performSearch = () => {
+    const value = searchTerm.toLowerCase().trim();
+    if (value === "") {
+      setFilteredEmployees(employees);
+      return;
+    }
 
-  // Show message if no employees found
-  if (employees.length === 0) {
-    return (
-      <div className="employees-container">
-        <h2>No Employees Found</h2>
-        <p>Add employees to see them here.</p>
-      </div>
+    const filtered = employees.filter((emp) =>
+      emp.fullName?.toLowerCase().includes(value)||
+    emp.nationalId?.toLowerCase().includes(value)
     );
-  }
 
-  // Render employees table
+    setFilteredEmployees(filtered);
+  };
+
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      performSearch();
+    }
+  };
+
+ 
+  const handleChange = (e) => {
+    setSearchTerm(e.target.value);
+    if (e.target.value === "") {
+      setFilteredEmployees(employees);
+    }
+  };
+
   return (
-    <div className="employees-container">
+    <div className="employees-table-container">
       <h2>Employees List</h2>
-      <table className="employees-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Full Name</th>
-            <th>National ID</th>
-            <th>Salary</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
 
-        <tbody>
-          {employees.map((emp, index) => (
-            <tr key={emp.id}>
-              <td>{index + 1}</td>
-              <td>{emp.fullName}</td>
-              <td>{emp.nationalId}</td>
-              <td>${emp.salary}</td>
-              <td className="actions">
-                <button className="view-btn">View</button>
-                <button className="edit-btn">Edit</button>
-                <button className="delete-btn">Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/*  Search bar */}
+      <div className="search-container">
+        
+        <input
+          type="text"
+          placeholder= "Search by  name and national ID..."
+          value={searchTerm}
+          onChange={handleChange}
+          onKeyDown={handleKeyPress}
+          className="search-input"
+        />
+        <button className="search-btn" onClick={performSearch}>
+          Search
+        </button>
+      </div>
+
+      {loading ? (
+        <p>Loading employees...</p>
+      ) : filteredEmployees.length === 0 ? (
+        <p>No employees found.</p>
+      ) : (
+        <div className="scrollable-table">
+          <table className="employees-table">
+            <thead>
+              <tr>
+                
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Birth Date</th>
+                <th>Phone</th>
+                <th>National ID</th>
+                <th>Address</th>
+                <th>Age</th>
+                <th>Salary</th>
+                <th>Start Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEmployees.map((emp, i) => (
+                <tr key={emp._id}>
+                
+                  <td>{emp.fullName}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.birthDate?.slice(0, 10)}</td>
+                  <td>{emp.phoneNumber}</td>
+                  <td>{emp.nationalId}</td>
+                  <td>{emp.address}</td>
+                  <td>{emp.age}</td>
+                  <td>{emp.salary}</td>
+                  <td>{emp.startDate?.slice(0, 10)}</td>
+                  <td className="actions">
+                    <button className="view-btn">View</button>
+                    <button className="edit-btn">Edit</button>
+                    <button className="delete-btn">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

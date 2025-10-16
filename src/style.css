@@ -396,82 +396,199 @@ h5 {
 }
 
 
-/* employeesTable style */
+/* employeesTable  style */
 
-.employees-container {
-  max-width: 800px;
-  
-  margin: 10px;
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.1);
-  padding: 30px;
+
+.employees-table-container:hover {
+  transform: scale(1.01);
 }
 
-.employees-container h2 {
+.employees-table-container h2 {
   text-align: center;
-  color: #070707;
+  color: #004aad;
   margin-bottom: 25px;
+  font-size: 2rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* Table Styling */
 .employees-table {
   width: 100%;
   border-collapse: collapse;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: 0.3s;
+}
+
+.employees-table thead {
+  background: #004aad;
+  color: #fff;
 }
 
 .employees-table th,
 .employees-table td {
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-  padding: 12px 10px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
 .employees-table th {
-  background-color: #c1d0e0;
-  color: #131314;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   font-weight: 600;
 }
 
+.employees-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.3s ease;
+}
+
+.employees-table tbody tr:hover {
+  background: #f4f8ff;
+  transform: scale(1.01);
+}
+
+/* Index column */
+.employees-table td:first-child {
+  font-weight: 600;
+  color: #004aad;
+}
+
+/* Action buttons */
 .actions {
   display: flex;
+  justify-content: center;
   gap: 8px;
 }
 
-.edit-btn,
-.delete-btn,.view-btn {
+.actions button {
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
+  color: white;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+/* Buttons Color Theme */
+.view-btn {
+  background-color: #2196f3;
+}
+.view-btn:hover {
+  background-color: #1976d2;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
 }
 
 .edit-btn {
-  background-color: #2563eb;
-  color: white;
+  background-color: #ffb300;
 }
-
 .edit-btn:hover {
-  background-color: #1d4ed8;
+  background-color: #f57c00;
+  box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
 }
 
 .delete-btn {
-  background-color: #ef4444;
-  color: white;
+  background-color: #e53935;
 }
-
 .delete-btn:hover {
-  background-color: #dc2626;
+  background-color: #c62828;
+  box-shadow: 0 0 10px rgba(229, 57, 53, 0.4);
+}
+/* Scrollable employees table body */
+.scrollable-table {
+  max-height: 320px; 
+  overflow-y: auto;
+  display: block;
+  border-radius: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #004aad #f0f4ff;
 }
 
-.view-btn{
-     background-color: #2563eb;
-  color: white;
+/* Scrollbar design for Chrome/Edge */
+.scrollable-table::-webkit-scrollbar {
+  width: 8px;
 }
-.view-btn:hover {
-  background-color: #1d4ed8;
+
+.scrollable-table::-webkit-scrollbar-track {
+  background: #f0f4ff;
+  border-radius: 10px;
 }
+
+.scrollable-table::-webkit-scrollbar-thumb {
+  background: #004aad;
+  border-radius: 10px;
+}
+
+.scrollable-table::-webkit-scrollbar-thumb:hover {
+  background: #0066ff;
+}
+
+/* Keep header fixed when scrolling */
+.employees-table thead {
+  position: sticky;
+  top: 0;
+  background-color: #004aad;
+  color: #fff;
+  z-index: 2;
+}
+/* 🔍 Search Bar Styling */
+.search-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  padding: 10px 15px;
+  width: 280px;
+  border-radius: 8px;
+  border: 2px solid #004aad;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: #f9fbff;
+  color: #333;
+}
+
+.search-input::placeholder {
+  color: #7b8ea0;
+}
+
+.search-input:focus {
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 74, 173, 0.4);
+  transform: scale(1.02);
+}
+
+/* ✨ Search Button */
+.search-btn {
+  background-color: #004aad;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+  background-color: #0066ff;
+  box-shadow: 0 0 12px rgba(0, 102, 255, 0.4);
+  transform: scale(1.05);
+}
+
+
+
+
+
 /* schedule interview */
 .interview-container {
   max-width: 900px;
