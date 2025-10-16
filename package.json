@@ -21,6 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:all": "concurrently \"npm start --prefix backend\" \"npm start\" ",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -55,5 +56,8 @@
   "bugs": {
     "url": "https://github.com/Qosai1/Birzeit-Municipality/issues"
   },
-  "homepage": "."
+  "homepage": ".",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

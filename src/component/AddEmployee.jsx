@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../style.css";
 
 export default function AddEmployee() {
+  // State to hold the form data
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -15,37 +16,77 @@ export default function AddEmployee() {
     startDate: "",
   });
 
+
+  
+  // Fetch all employees when component mounts
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  // Function to fetch employees from API
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/employees");
+      const data = await res.json();
+      setEmployees(data);
+    } catch (err) {
+      console.error("Failed to fetch employees:", err);
+    }
+  };
+
+  // Handle form input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
- const handleSubmit = (e) => {
-  e.preventDefault();
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const employees = JSON.parse(localStorage.getItem("employees")) || [];
-  const updatedEmployees = [...employees, formData];
+    try {
+      const response = await fetch("http://localhost:5000/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-  localStorage.setItem("employees", JSON.stringify(updatedEmployees));
-  alert(`Employee ${formData.fullName} added successfully!`);
-  setFormData({
-    fullName: "",
-    email: "",
-    birthDate: "",
-    phoneNumber: "",
-    nationalId: "",
-    address: "",
-    homePhone: "",
-    age: "",
-    salary: "",
-    startDate: "",
-  });
-};
+      const data = await response.json();
 
+      if (response.ok) {
+        alert(`Employee ${formData.fullName} added successfully!`);
+
+        // Reset form after submission
+        setFormData({
+          fullName: "",
+          email: "",
+          birthDate: "",
+          phoneNumber: "",
+          nationalId: "",
+          address: "",
+          homePhone: "",
+          age: "",
+          salary: "",
+          startDate: "",
+        });
+
+        // Refresh the employee list
+        fetchEmployees();
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error, check console.");
+    }
+  };
 
   return (
     <div className="add-employee-container">
       <h2>Add New Employee</h2>
 
+      {/* Employee form */}
       <form className="add-employee-form" onSubmit={handleSubmit}>
         <label>
           Full Name:
