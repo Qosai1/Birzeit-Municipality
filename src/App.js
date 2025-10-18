@@ -9,6 +9,8 @@ import EmployeesTableDB from "./component/EmployeesTableDB";
 import Login from "./component/LogIn";
 import ScheduleInterview from "./component/Schedule Interview";
 import EmployeesTable from "./component/EmployeesTable";
+import EmployeesChart from "./component/EmployeesChart";
+import InterviewsTable from "./component/InterviewsTable";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,10 +40,11 @@ export default function App() {
               element={
                 <div>
                   <Details />
-                  <div className="dd">
+                  <div className="dashboard-layout">
                     <EmployeesTableDB />
                     <QuickActions />
                   </div>
+                  <EmployeesChart/>
                 </div>
               }
             />
@@ -50,7 +53,9 @@ export default function App() {
             <Route path="/add" element={<AddEmployee />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/employees" element={<EmployeesTable />} />
-              <Route path="/schedule" element={<ScheduleInterview />} />
+            <Route path="/schedule" element={<ScheduleInterview />} />
+            <Route path="/interviews" element={<InterviewsTable />} />
+
 
 
             {/* <Route path="*" element={<Navigate to="/" />} /> */}

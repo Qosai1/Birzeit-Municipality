@@ -74,6 +74,14 @@ export const updateEmployee = (req, res) => {
     startDate,
   } = req.body;
 
+   const formatDate = (date) => {
+    if (!date) return null;
+    try {
+      return new Date(date).toISOString().split("T")[0]; // => "2025-09-29"
+    } catch {
+      return null;
+    }
+  };
   const sql = `
     UPDATE employees SET
     fullName=?, email=?, birthDate=?, phoneNumber=?, nationalId=?, address=?, homePhone=?, age=?, salary=?, startDate=?
@@ -82,19 +90,24 @@ export const updateEmployee = (req, res) => {
   const values = [
     fullName,
     email,
-    birthDate,
+    formatDate(birthDate),
     phoneNumber,
     nationalId,
     address,
     homePhone,
     age,
     salary,
-    startDate,
+     formatDate(startDate),
     id,
   ];
+console.log("🟡 Received update request for ID:", id);
+console.log("🟢 Data received:", req.body);
 
   db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+    if (err) {
+    console.error("❌ SQL Error:", err.sqlMessage || err);
+      return res.status(500).json({ error: err.sqlMessage || err });
+    }
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Employee not found" });
     res.json({ message: "Employee updated successfully" });

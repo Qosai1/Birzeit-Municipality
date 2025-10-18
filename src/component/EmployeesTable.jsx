@@ -1,13 +1,21 @@
 import { useEffect, useState } from "react";
-
-
 import "../style.css";
+import Notification from "./Notification";
+import EditEmployeeModal from "./EditEmployeeModal"; 
 
 export default function EmployeesTable() {
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState({ type: "", message: "" });
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification({ type: "", message: "" }), 3000);
+  };
 
   useEffect(() => {
     fetchEmployees();
@@ -20,61 +28,106 @@ export default function EmployeesTable() {
       setEmployees(data);
       setFilteredEmployees(data);
     } catch (err) {
-      console.error("Failed to fetch employees:", err);
+      console.error(err);
+      showNotification("error", "Failed to load employees.");
     } finally {
       setLoading(false);
     }
   };
 
-  
-  const performSearch = () => {
-    const value = searchTerm.toLowerCase().trim();
-    if (value === "") {
-      setFilteredEmployees(employees);
-      return;
-    }
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
 
-    const filtered = employees.filter((emp) =>
-      emp.fullName?.toLowerCase().includes(value)||
-    emp.nationalId?.toLowerCase().includes(value)
+    const filtered = employees.filter(
+      (emp) =>
+        emp.fullName?.toLowerCase().includes(value) ||
+        emp.nationalId?.toString().includes(value)
     );
-
     setFilteredEmployees(filtered);
   };
 
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      performSearch();
+    try {
+      const res = await fetch(`http://localhost:5000/api/employees/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showNotification("success", `Employee "${name}" deleted successfully!`);
+        setEmployees(employees.filter((emp) => emp.id !== id));
+        setFilteredEmployees(filteredEmployees.filter((emp) => emp.id !== id));
+      } else {
+        showNotification("error", data.message || "Failed to delete employee.");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Server error while deleting employee.");
     }
   };
 
- 
-  const handleChange = (e) => {
-    setSearchTerm(e.target.value);
-    if (e.target.value === "") {
-      setFilteredEmployees(employees);
+  const handleEditClick = (employee) => {
+    setEditingEmployee(employee);
+    setEditForm({ ...employee });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/employees/${editingEmployee.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editForm),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showNotification("success", "Employee updated successfully!");
+        const updatedList = employees.map((emp) =>
+          emp.id === editingEmployee.id ? { ...editForm } : emp
+        );
+        setEmployees(updatedList);
+        setFilteredEmployees(updatedList);
+        setEditingEmployee(null);
+      } else {
+        showNotification("error", data.message || "Failed to update employee.");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Server error during update.");
     }
+  };
+
+  const handleChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="employees-table-container">
-      <h2>Employees List</h2>
+    <div className="scrollable-table">
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ type: "", message: "" })}
+      />
 
-      {/*  Search bar */}
       <div className="search-container">
-        
         <input
           type="text"
-          placeholder= "Search by  name and national ID..."
+          placeholder=" Search by name, or national ID..."
           value={searchTerm}
-          onChange={handleChange}
-          onKeyDown={handleKeyPress}
+          onChange={handleSearch}
           className="search-input"
         />
-        <button className="search-btn" onClick={performSearch}>
-          Search
-        </button>
+       
       </div>
 
       {loading ? (
@@ -82,46 +135,62 @@ export default function EmployeesTable() {
       ) : filteredEmployees.length === 0 ? (
         <p>No employees found.</p>
       ) : (
-        <div className="scrollable-table">
-          <table className="employees-table">
-            <thead>
-              <tr>
-                
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Birth Date</th>
-                <th>Phone</th>
-                <th>National ID</th>
-                <th>Address</th>
-                <th>Age</th>
-                <th>Salary</th>
-                <th>Start Date</th>
-                <th>Actions</th>
+        <table className="employees-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Birth Date</th>
+              <th>Phone</th>
+              <th>Home Phone</th>
+              <th>National ID</th>
+              <th>Address</th>
+              <th>Age</th>
+              <th>Salary</th>
+              <th>Start Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.map((emp) => (
+              <tr key={emp.id}>
+                <td>{emp.fullName}</td>
+                <td>{emp.email}</td>
+                <td>{emp.birthDate?.slice(0, 10)}</td>
+                <td>{emp.phoneNumber}</td>
+                <td>{emp.homePhone}</td>
+                <td>{emp.nationalId}</td>
+                <td>{emp.address}</td>
+                <td>{emp.age}</td>
+                <td>{emp.salary}</td>
+                <td>{emp.startDate?.slice(0, 10)}</td>
+                <td className="actions">
+                  <button
+                    className="edit-btn"
+                    onClick={() => handleEditClick(emp)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(emp.id, emp.fullName)}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredEmployees.map((emp, i) => (
-                <tr key={emp._id}>
-                
-                  <td>{emp.fullName}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.birthDate?.slice(0, 10)}</td>
-                  <td>{emp.phoneNumber}</td>
-                  <td>{emp.nationalId}</td>
-                  <td>{emp.address}</td>
-                  <td>{emp.age}</td>
-                  <td>{emp.salary}</td>
-                  <td>{emp.startDate?.slice(0, 10)}</td>
-                  <td className="actions">
-                    <button className="view-btn">View</button>
-                    <button className="edit-btn">Edit</button>
-                    <button className="delete-btn">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {editingEmployee && (
+        <EditEmployeeModal
+          editForm={editForm}
+          onChange={handleChange}
+          onSave={handleUpdate}
+          onCancel={() => setEditingEmployee(null)}
+        />
       )}
     </div>
   );

@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import emailjs from "emailjs-com";
+import Notification from "./Notification";
+import InterviewsTable from "./InterviewsTable";
 import "../style.css";
+import { Link } from "react-router-dom";
+
 
 export default function ScheduleInterview() {
   const [formData, setFormData] = useState({
@@ -17,80 +21,84 @@ export default function ScheduleInterview() {
     notes: "",
   });
 
-  const [interviews, setInterviews] = useState([]);
+  const [notification, setNotification] = useState({ message: "", type: "" });
+  const [refreshTrigger, setRefreshTrigger] = useState(0); 
 
-  useEffect(() => {
-    const stored = localStorage.getItem("interviews");
-    if (stored) setInterviews(JSON.parse(stored));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("interviews", JSON.stringify(interviews));
-  }, [interviews]);
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification({ message: "", type: "" }), 4000);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-   
-    setInterviews([...interviews, formData]);
+    try {
+      const res = await fetch("http://localhost:5000/api/interviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-  
-    const templateParams = {
-      to_email: formData.email,
-      name: formData.employeeName,
-      position: formData.department,
-      date: formData.interviewDate,
-      time: formData.interviewTime,
-      location: formData.location,
-    };
+      const data = await res.json();
 
-  
-    emailjs
-      .send(
-        "service_pys19up", // Service ID
-        "template_h2dhgcy", // Template ID
-        templateParams,
-        "Bp5qg8qK9GrKxMucC" // Public Key
-      )
-      .then(
-        (response) => {
-          console.log("Email sent successfully!", response.status, response.text);
-          alert("Interview scheduled and email sent to the candidate successfully!");
-        },
-        (error) => {
-          console.error("Failed to send email:", error);
-          alert("⚠️ Interview saved, but email failed to send.");
-        }
-      );
+      if (res.ok) {
+        await emailjs.send(
+          "service_pys19up",
+          "template_h2dhgcy",
+          {
+            to_email: formData.email,
+            name: formData.employeeName,
+            position: formData.department,
+            date: formData.interviewDate,
+            time: formData.interviewTime,
+            location: formData.location,
+          },
+          "Bp5qg8qK9GrKxMucC"
+        );
 
-    setFormData({
-      employeeName: "",
-      email: "",
-      department: "",
-      interviewType: "",
-      interviewMode: "",
-      interviewDate: "",
-      interviewTime: "",
-      interviewer: "",
-      location: "",
-      duration: "",
-      notes: "",
-    });
-  };
+        showNotification(
+          "success",
+          `Interview scheduled for ${formData.employeeName}! Email sent successfully.`
+        );
 
-  const handleDelete = (index) => {
-    const updated = interviews.filter((_, i) => i !== index);
-    setInterviews(updated);
+        setFormData({
+          employeeName: "",
+          email: "",
+          department: "",
+          interviewType: "",
+          interviewMode: "",
+          interviewDate: "",
+          interviewTime: "",
+          interviewer: "",
+          location: "",
+          duration: "",
+          notes: "",
+        });
+
+        setRefreshTrigger((prev) => prev + 1); 
+      } else {
+        showNotification("error", data.error || "Failed to schedule interview.");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Server error, please try again.");
+    }
   };
 
   return (
     <div className="interview-container">
-      <h2 className="page-title"> HR Interview Scheduling System</h2>
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ message: "", type: "" })}
+      />
+
+      <h2 className="page-title">HR Interview Scheduling System</h2>
 
       <form className="interview-form" onSubmit={handleSubmit}>
         <div className="form-row">
@@ -236,49 +244,14 @@ export default function ScheduleInterview() {
         </div>
 
         <button type="submit" className="schedule-btn">
-           Schedule Interview & Send Email
+          Schedule Interview & Send Email
         </button>
+        <Link to="/interviews" className="view-table-link">
+              View Scheduled Interviews</Link>
       </form>
 
-      <h3 className="table-title">Scheduled Interviews</h3>
-      {interviews.length === 0 ? (
-        <p className="no-data">No interviews scheduled yet.</p>
-      ) : (
-        <table className="interview-table">
-          <thead>
-            <tr>
-              <th>Candidate</th>
-              <th>Email</th>
-              <th>Department</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Mode</th>
-              <th>Interviewer</th>
-              <th>Location</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {interviews.map((item, index) => (
-              <tr key={index}>
-                <td>{item.employeeName}</td>
-                <td>{item.email}</td>
-                <td>{item.department}</td>
-                <td>{item.interviewDate}</td>
-                <td>{item.interviewTime}</td>
-                <td>{item.interviewMode}</td>
-                <td>{item.interviewer}</td>
-                <td>{item.location}</td>
-                <td>
-                  <button className="delete-btn" onClick={() => handleDelete(index)}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  
+      
     </div>
   );
 }

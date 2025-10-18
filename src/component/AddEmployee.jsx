@@ -1,8 +1,8 @@
 import { useState } from "react";
+import Notification from "./Notification";
 import "../style.css";
 
 export default function AddEmployee() {
-  // State to hold the form data
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -16,30 +16,31 @@ export default function AddEmployee() {
     startDate: "",
   });
 
-  // Handle form input changes
+  const [notification, setNotification] = useState({ type: "", message: "" });
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification({ type: "", message: "" }), 5000); 
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       const response = await fetch("http://localhost:5000/api/employees", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert(`Employee ${formData.fullName} added successfully!`);
-
-        // Reset form after submission
+        showNotification("success", `Employee ${formData.fullName} added successfully!`);
         setFormData({
           fullName: "",
           email: "",
@@ -52,22 +53,27 @@ export default function AddEmployee() {
           salary: "",
           startDate: "",
         });
-
       } else {
-        alert("Error: " + data.error);
+        showNotification("error", "Error: " + (data.error || "Unknown error"));
       }
     } catch (err) {
       console.error(err);
-      alert("Server error, check console.");
+      showNotification("error", "Server error, please try again.");
     }
   };
 
-  return (
+  return (<>
     <div className="add-employee-container">
-      <h2>Add New Employee</h2>
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ type: "", message: "" })}
+      />
 
-      {/* Employee form */}
+      
+
       <form className="add-employee-form" onSubmit={handleSubmit}>
+        <h2>Add New Employee</h2>
         <label>
           Full Name:
           <input
@@ -177,7 +183,9 @@ export default function AddEmployee() {
         <button type="submit" className="save-btn">
           Save Employee
         </button>
+     
       </form>
     </div>
-  );
+     
+  </>);
 }

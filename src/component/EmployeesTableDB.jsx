@@ -58,6 +58,7 @@ export default function EmployeesTableDB() {
             <th>Full Name</th>
             <th>National ID</th>
             <th>Salary</th>
+            <th>Start Date</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -68,11 +69,11 @@ export default function EmployeesTableDB() {
               
               <td>{emp.fullName}</td>
               <td>{emp.nationalId}</td>
-              <td>${emp.salary}</td>
+              <td>{emp.salary}$</td>
+              <td>{emp.startDate?.slice(0, 10)}</td>
               <td className="actions">
                 <button className="view-btn">View</button>
-                <button className="edit-btn">Edit</button>
-                <button className="delete-btn">Delete</button>
+              
               </td>
             </tr>
           ))}
