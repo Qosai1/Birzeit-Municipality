@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart,Bar,XAxis,YAxis,CartesianGrid,Tooltip, Legend, ResponsiveContainer,} from "recharts";
 import "../style.css";
 
 export default function EmployeesChart() {
@@ -55,7 +46,7 @@ export default function EmployeesChart() {
       ) : (
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="10 10" />
             <XAxis dataKey="city" />
             <YAxis allowDecimals={false} />
             <Tooltip />

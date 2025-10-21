@@ -59,7 +59,7 @@ export default function EmployeesTableDB() {
             <th>National ID</th>
             <th>Salary</th>
             <th>Start Date</th>
-            <th>Actions</th>
+            <th>Email</th>
           </tr>
         </thead>
 
@@ -71,10 +71,9 @@ export default function EmployeesTableDB() {
               <td>{emp.nationalId}</td>
               <td>{emp.salary}$</td>
               <td>{emp.startDate?.slice(0, 10)}</td>
-              <td className="actions">
-                <button className="view-btn">View</button>
-              
-              </td>
+              <td>
+                {emp.email}
+                </td>
             </tr>
           ))}
         </tbody>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../style.css";
 import Notification from "./Notification";
+import InterviewCalendar from "./InterviewCalendar";
 
 export default function InterviewsTable({ refreshTrigger }) {
   const [interviews, setInterviews] = useState([]);
@@ -50,7 +51,6 @@ export default function InterviewsTable({ refreshTrigger }) {
         message={notification.message}
         onClose={() => setNotification({ type: "", message: "" })}
       />
-
       <h3 className="table-title">Scheduled Interviews</h3>
       {interviews.length === 0 ? (
         <p className="no-data">No interviews scheduled yet.</p>
@@ -58,7 +58,6 @@ export default function InterviewsTable({ refreshTrigger }) {
         <table className="interview-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Candidate</th>
               <th>Email</th>
               <th>Department</th>
@@ -73,7 +72,6 @@ export default function InterviewsTable({ refreshTrigger }) {
           <tbody>
             {interviews.map((item) => (
               <tr key={item.id}>
-                <td>{item.id}</td>
                 <td>{item.employeeName}</td>
                 <td>{item.email}</td>
                 <td>{item.department}</td>

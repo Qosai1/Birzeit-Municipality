@@ -100,8 +100,7 @@ export const updateEmployee = (req, res) => {
      formatDate(startDate),
     id,
   ];
-console.log("🟡 Received update request for ID:", id);
-console.log("🟢 Data received:", req.body);
+
 
   db.query(sql, values, (err, result) => {
     if (err) {

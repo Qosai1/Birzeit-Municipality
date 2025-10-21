@@ -11,6 +11,7 @@ import ScheduleInterview from "./component/Schedule Interview";
 import EmployeesTable from "./component/EmployeesTable";
 import EmployeesChart from "./component/EmployeesChart";
 import InterviewsTable from "./component/InterviewsTable";
+import InterviewCalendar from "./component/InterviewCalendar";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/employees" element={<EmployeesTable />} />
             <Route path="/schedule" element={<ScheduleInterview />} />
             <Route path="/interviews" element={<InterviewsTable />} />
+            <Route path="/InterviewCalendar" element={<InterviewCalendar />} />
 
 
 

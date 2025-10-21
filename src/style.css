@@ -129,6 +129,7 @@ body{
 /* ditails style */
 .details {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
@@ -222,69 +223,67 @@ h5 {
 }
 
 /* Quick Actions style */
+.actions{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
 .quick-actions {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  width: 500px;
-  background: #fff;
-  padding: 25px;
-  border-radius: 16px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
 }
 
 .action-link {
   display: flex;
+
   align-items: center;
-  gap: 12px;
-  padding: 12px 15px;
-  font-weight: 600;
-  border-radius: 10px;
+  gap: 5px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.action-link svg {
-  font-size: 22px;
+.action-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .action-link.add {
-  background: #eaf6ff;
-  color: #007bff;
-}
-.action-link.add:hover {
-  background: #007bff;
-  color: white;
+  background-color: #28a745;
 }
 
-.action-link.report {
-  background: #fceae8;
-  color: #e63946;
-}
-.action-link.report:hover {
-  background: #e63946;
-  color: white;
-}
-
-.action-link.view {
-  background: #e8f9ee;
-  color: #2d6a4f;
-}
-.action-link.view:hover {
-  background: #2d6a4f;
-  color: white;
+.action-link.employees {
+  background-color: #17a2b8; 
 }
 
 .action-link.schedule {
-  background: #fff8e1;
-  color: #ff9800;
+  background-color: #ffc107; 
+  color: #212529;
 }
-.action-link.schedule:hover {
-  background: #ff9800;
-  color: white;
+
+.action-link.interviews {
+  background-color: #fd7e14;
 }
+
+.action-link.Documents {
+  background-color: #6f42c1; 
+}
+
+.action-link.InterviewCalendar {
+  background-color: #007bff; 
+}
+
+
+
 .dashboard-layout {
  display: flex;
+ flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
@@ -466,8 +465,9 @@ h5 {
 
 
 /* Action buttons */
-.actions {
+.quick-actions {
   display: flex;
+  flex-direction: c;
   justify-content: center;
   gap: 8px;
 }
@@ -482,7 +482,6 @@ h5 {
   transition: all 0.3s ease;
 }
 
-/* Buttons Color Theme */
 .view-btn {
   background-color: #2196f3;
 }
@@ -894,6 +893,7 @@ border-color: #2563eb;
 /* chart style */
 .chart-container {
   background: #fff;
+  width: 50%;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -901,5 +901,55 @@ border-color: #2563eb;
 
 .chart-container h2 {
   color: #004aad;
+  
   margin-bottom: 20px;
 }
+.calendar-container {
+  width: 600px;
+  height: 600px; /* المربع المطلوب */
+  margin: 50px auto;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(20, 20, 40, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.fullcalendar {
+  flex: 1; /* يملأ كل ارتفاع الحاوية */
+  min-height: 0; 
+  overflow: auto;
+}
+
+.fc .fc-toolbar {
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar-container h2 {
+  margin: 0 0 12px 0;
+  font-size: 1.15rem;
+  color: #0f172a;
+  text-align: center;
+}
+
+.fc .fc-event {
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 1px 2px rgba(2,6,23,0.08);
+}
+
+.fc .fc-event-time {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+

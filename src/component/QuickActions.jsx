@@ -4,6 +4,8 @@ import { IoPersonAddSharp } from "react-icons/io5";
 import { TbReportAnalytics } from "react-icons/tb";
 import { HiMiniUsers } from "react-icons/hi2";
 import { TbCalendarUser } from "react-icons/tb";
+import { SlCalender } from "react-icons/sl";
+
 
 import "../style.css";
 
@@ -14,7 +16,7 @@ export default function QuickActions() {
         <IoPersonAddSharp /> Add New Employee
       </Link>
 
-    <Link to="/employees" className="action-link view">
+    <Link to="/employees" className="action-link employees">
         <HiMiniUsers /> View All Employees
       </Link>
       
@@ -23,11 +25,14 @@ export default function QuickActions() {
       <Link to="/schedule" className="action-link schedule">
         <CgCalendarDates /> Schedule Interview
       </Link>
-      <Link to="/interviews" className="action-link view">
+      <Link to="/interviews" className="action-link interviews">
                 <TbCalendarUser/>  View Scheduled Interviews
                   </Link>
-      <Link to="/Documents" className="action-link report">
+      <Link to="/Documents" className="action-link Documents">
         <TbReportAnalytics /> Documents
+      </Link>
+      <Link to="/InterviewCalendar" className="action-link InterviewCalendar">
+        <SlCalender /> InterviewCalendar
       </Link>
     </div>
   );
