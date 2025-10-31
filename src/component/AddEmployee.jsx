@@ -6,7 +6,7 @@ export default function AddEmployee() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    department:"",
+    department: "",
     birthDate: "",
     phoneNumber: "",
     nationalId: "",
@@ -14,13 +14,16 @@ export default function AddEmployee() {
     homePhone: "",
     salary: "",
     startDate: "",
+    username: "",
+    password: "",
+    role: "employee", 
   });
 
   const [notification, setNotification] = useState({ type: "", message: "" });
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
-    setTimeout(() => setNotification({ type: "", message: "" }), 5000); 
+    setTimeout(() => setNotification({ type: "", message: "" }), 5000);
   };
 
   const handleChange = (e) => {
@@ -44,15 +47,17 @@ export default function AddEmployee() {
         setFormData({
           fullName: "",
           email: "",
-          department:"",
+          department: "",
           birthDate: "",
           phoneNumber: "",
           nationalId: "",
           address: "",
           homePhone: "",
-          age: "",
           salary: "",
           startDate: "",
+          username: "",
+          password: "",
+          role: "employee",
         });
       } else {
         showNotification("error", "Error: " + (data.error || "Unknown error"));
@@ -63,7 +68,7 @@ export default function AddEmployee() {
     }
   };
 
-  return (<>
+  return (
     <div className="add-employee-container">
       <Notification
         type={notification.type}
@@ -71,10 +76,9 @@ export default function AddEmployee() {
         onClose={() => setNotification({ type: "", message: "" })}
       />
 
-      
-
       <form className="add-employee-form" onSubmit={handleSubmit}>
         <h2>Add New Employee</h2>
+
         <label>
           Full Name:
           <input
@@ -97,7 +101,8 @@ export default function AddEmployee() {
           />
         </label>
 
-        <label>Department:</label>
+        <label>
+          Department:
           <input
             type="text"
             name="department"
@@ -105,6 +110,7 @@ export default function AddEmployee() {
             onChange={handleChange}
             required
           />
+        </label>
 
         <label>
           Date of Birth:
@@ -159,7 +165,6 @@ export default function AddEmployee() {
           />
         </label>
 
-
         <label>
           Salary:
           <input
@@ -181,12 +186,45 @@ export default function AddEmployee() {
           />
         </label>
 
+        <hr />
+
+        <h3>Account Information</h3>
+
+        <label>
+          Username:
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        </label>
+
+        <label>
+          Password:
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </label>
+
+        <label>
+          Role:
+          <select name="role" value={formData.role} onChange={handleChange}>
+            <option value="employee">Employee</option>
+            <option value="hr">HR</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+
         <button type="submit" className="save-btn">
           Save Employee
         </button>
-     
       </form>
     </div>
-     
-  </>);
+  );
 }

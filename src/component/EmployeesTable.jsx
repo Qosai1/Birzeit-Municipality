@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "../style.css";
 import Notification from "./Notification";
-import EditEmployeeModal from "./EditEmployeeModal"; 
+import EditEmployeeModal from "./EditEmployeeModal";
 
 export default function EmployeesTable() {
   const [employees, setEmployees] = useState([]);
@@ -11,6 +11,7 @@ export default function EmployeesTable() {
   const [notification, setNotification] = useState({ type: "", message: "" });
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -38,7 +39,6 @@ export default function EmployeesTable() {
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
-
     const filtered = employees.filter(
       (emp) =>
         emp.fullName?.toLowerCase().includes(value) ||
@@ -48,25 +48,22 @@ export default function EmployeesTable() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
-
+    if (!window.confirm(`Are you sure you want to disable ${name}?`)) return;
     try {
       const res = await fetch(`http://localhost:5000/api/employees/${id}`, {
         method: "DELETE",
       });
 
-      const data = await res.json();
-
       if (res.ok) {
-        showNotification("success", `Employee "${name}" deleted successfully!`);
+        showNotification("success", `Employee "${name}" disabled successfully!`);
         setEmployees(employees.filter((emp) => emp.id !== id));
         setFilteredEmployees(filteredEmployees.filter((emp) => emp.id !== id));
       } else {
-        showNotification("error", data.message || "Failed to delete employee.");
+        showNotification("error", "Failed to disable employee.");
       }
     } catch (err) {
       console.error(err);
-      showNotification("error", "Server error while deleting employee.");
+      showNotification("error", "Server error while disabling employee.");
     }
   };
 
@@ -77,7 +74,6 @@ export default function EmployeesTable() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-
     try {
       const res = await fetch(
         `http://localhost:5000/api/employees/${editingEmployee.id}`,
@@ -87,9 +83,7 @@ export default function EmployeesTable() {
           body: JSON.stringify(editForm),
         }
       );
-
       const data = await res.json();
-
       if (res.ok) {
         showNotification("success", "Employee updated successfully!");
         const updatedList = employees.map((emp) =>
@@ -111,6 +105,28 @@ export default function EmployeesTable() {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+
+    const sorted = [...filteredEmployees].sort((a, b) => {
+      if (a[key] === null) return 1;
+      if (b[key] === null) return -1;
+      if (a[key] === b[key]) return 0;
+      if (typeof a[key] === "string") {
+        return direction === "asc"
+          ? a[key].localeCompare(b[key])
+          : b[key].localeCompare(a[key]);
+      } else {
+        return direction === "asc" ? a[key] - b[key] : b[key] - a[key];
+      }
+    });
+    setFilteredEmployees(sorted);
+  };
+
   return (
     <div className="scrollable-table">
       <Notification
@@ -122,12 +138,11 @@ export default function EmployeesTable() {
       <div className="search-container">
         <input
           type="text"
-          placeholder=" Search by name, or national ID..."
+          placeholder=" Search by name or national ID..."
           value={searchTerm}
           onChange={handleSearch}
           className="search-input"
         />
-       
       </div>
 
       {loading ? (
@@ -138,16 +153,26 @@ export default function EmployeesTable() {
         <table className="employees-table">
           <thead>
             <tr>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Department </th>
-              <th>Birth Date</th>
-              <th>Phone</th>
-              <th>Home Phone</th>
-              <th>National ID</th>
-              <th>Address</th>
-              <th>Salary</th>
-              <th>Start Date</th>
+              {[
+                "fullName",
+                "email",
+                "department",
+                "birthDate",
+                "phoneNumber",
+                "homePhone",
+                "nationalId",
+                "address",
+                "salary",
+                "startDate",
+              ].map((key) => (
+                <th key={key} onClick={() => handleSort(key)} style={{ cursor: "pointer" }}>
+                  {key
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/^./, (str) => str.toUpperCase())}
+                  {sortConfig.key === key &&
+                    (sortConfig.direction === "asc" ? " ↑" : " ↓")}
+                </th>
+              ))}
               <th>Actions</th>
             </tr>
           </thead>

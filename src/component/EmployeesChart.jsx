@@ -25,8 +25,8 @@ export default function EmployeesChart() {
     const grouped = {};
 
     data.forEach((emp) => {
-      const city = emp.address || "Unknown";
-      grouped[city] = (grouped[city] || 0) + 1;
+      const department = emp.department || "Unknown";
+      grouped[department] = (grouped[department] || 0) + 1;
     });
 
     const chartArray = Object.entries(grouped).map(([city, count]) => ({
@@ -39,7 +39,7 @@ export default function EmployeesChart() {
 
   return (
     <div className="chart-container">
-      <h2> Employees by City</h2>
+      <h2> Employees by Department</h2>
 
       {chartData.length === 0 ? (
         <p>No employee data available.</p>

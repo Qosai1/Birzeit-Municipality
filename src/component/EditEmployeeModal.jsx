@@ -2,13 +2,15 @@ import React from "react";
 import "../style.css";
 
 export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel }) {
-  if (!editForm) return null; 
+  if (!editForm) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal">
         <h3>Edit Employee</h3>
         <form onSubmit={onSave} className="edit-form">
+
+          {/* ===== المعلومات الأساسية ===== */}
           <label>Full Name</label>
           <input
             type="text"
@@ -24,9 +26,10 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             value={editForm.email || ""}
             onChange={onChange}
           />
+
           <label>Department</label>
           <input
-            type="department"
+            type="text"
             name="department"
             value={editForm.department || ""}
             onChange={onChange}
@@ -72,8 +75,6 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             onChange={onChange}
           />
 
-        
-
           <label>Salary</label>
           <input
             type="number"
@@ -89,6 +90,38 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             value={editForm.startDate?.slice(0, 10) || ""}
             onChange={onChange}
           />
+
+          <hr />
+
+          {/* ===== بيانات الحساب ===== */}
+          <h4>Account Information</h4>
+
+          <label>Username</label>
+          <input
+            type="text"
+            name="username"
+            value={editForm.username || ""}
+            onChange={onChange}
+          />
+
+          <label>Password</label>
+          <input
+            type="password"
+            name="password"
+            value={editForm.password || ""}
+            onChange={onChange}
+          />
+
+          <label>Role</label>
+          <select
+            name="role"
+            value={editForm.role || "employee"}
+            onChange={onChange}
+          >
+            <option value="employee">Employee</option>
+            <option value="hr">HR</option>
+            <option value="admin">Admin</option>
+          </select>
 
           <div className="modal-buttons">
             <button type="submit" className="save-btn">
