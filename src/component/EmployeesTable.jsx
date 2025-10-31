@@ -140,12 +140,12 @@ export default function EmployeesTable() {
             <tr>
               <th>Full Name</th>
               <th>Email</th>
+              <th>Department </th>
               <th>Birth Date</th>
               <th>Phone</th>
               <th>Home Phone</th>
               <th>National ID</th>
               <th>Address</th>
-              <th>Age</th>
               <th>Salary</th>
               <th>Start Date</th>
               <th>Actions</th>
@@ -156,12 +156,12 @@ export default function EmployeesTable() {
               <tr key={emp.id}>
                 <td>{emp.fullName}</td>
                 <td>{emp.email}</td>
+                <td>{emp.department}</td>
                 <td>{emp.birthDate?.slice(0, 10)}</td>
                 <td>{emp.phoneNumber}</td>
                 <td>{emp.homePhone}</td>
                 <td>{emp.nationalId}</td>
                 <td>{emp.address}</td>
-                <td>{emp.age}</td>
                 <td>{emp.salary}</td>
                 <td>{emp.startDate?.slice(0, 10)}</td>
                 <td className="actions">

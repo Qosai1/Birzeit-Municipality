@@ -6,12 +6,12 @@ export default function AddEmployee() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    department:"",
     birthDate: "",
     phoneNumber: "",
     nationalId: "",
     address: "",
     homePhone: "",
-    age: "",
     salary: "",
     startDate: "",
   });
@@ -44,6 +44,7 @@ export default function AddEmployee() {
         setFormData({
           fullName: "",
           email: "",
+          department:"",
           birthDate: "",
           phoneNumber: "",
           nationalId: "",
@@ -95,6 +96,15 @@ export default function AddEmployee() {
             required
           />
         </label>
+
+        <label>Department:</label>
+          <input
+            type="text"
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            required
+          />
 
         <label>
           Date of Birth:
@@ -149,15 +159,6 @@ export default function AddEmployee() {
           />
         </label>
 
-        <label>
-          Age:
-          <input
-            type="number"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-          />
-        </label>
 
         <label>
           Salary:

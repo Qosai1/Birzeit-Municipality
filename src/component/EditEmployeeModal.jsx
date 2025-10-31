@@ -24,6 +24,13 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             value={editForm.email || ""}
             onChange={onChange}
           />
+          <label>Department</label>
+          <input
+            type="department"
+            name="department"
+            value={editForm.department || ""}
+            onChange={onChange}
+          />
 
           <label>Birth Date</label>
           <input
@@ -65,13 +72,7 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             onChange={onChange}
           />
 
-          <label>Age</label>
-          <input
-            type="number"
-            name="age"
-            value={editForm.age || ""}
-            onChange={onChange}
-          />
+        
 
           <label>Salary</label>
           <input

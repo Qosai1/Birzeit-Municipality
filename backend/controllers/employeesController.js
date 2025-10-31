@@ -24,28 +24,28 @@ export const addEmployee = (req, res) => {
   const {
     fullName,
     email,
+    department,
     birthDate,
     phoneNumber,
     nationalId,
     address,
     homePhone,
-    age,
     salary,
     startDate,
   } = req.body;
   const sql = `
-    INSERT INTO employees (fullName, email, birthDate, phoneNumber, nationalId, address, homePhone, age, salary, startDate)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO employees (fullName, email,department, birthDate, phoneNumber, nationalId, address, homePhone, salary, startDate)
+    VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const values = [
     fullName,
     email,
+    department,
     birthDate,
     phoneNumber,
     nationalId,
     address,
     homePhone,
-    age,
     salary,
     startDate,
   ];
@@ -64,12 +64,12 @@ export const updateEmployee = (req, res) => {
   const {
     fullName,
     email,
+    department,
     birthDate,
     phoneNumber,
     nationalId,
     address,
     homePhone,
-    age,
     salary,
     startDate,
   } = req.body;
@@ -77,25 +77,25 @@ export const updateEmployee = (req, res) => {
    const formatDate = (date) => {
     if (!date) return null;
     try {
-      return new Date(date).toISOString().split("T")[0]; // => "2025-09-29"
+      return new Date(date).toISOString().split("T")[0]; 
     } catch {
       return null;
     }
   };
   const sql = `
     UPDATE employees SET
-    fullName=?, email=?, birthDate=?, phoneNumber=?, nationalId=?, address=?, homePhone=?, age=?, salary=?, startDate=?
+    fullName=?, email=?,department=?, birthDate=?, phoneNumber=?, nationalId=?, address=?, homePhone=?, salary=?, startDate=?
     WHERE id=?
   `;
   const values = [
     fullName,
     email,
+    department,
     formatDate(birthDate),
     phoneNumber,
     nationalId,
     address,
     homePhone,
-    age,
     salary,
      formatDate(startDate),
     id,
@@ -123,3 +123,17 @@ export const deleteEmployee = (req, res) => {
     res.json({ message: "Employee deleted successfully" });
   });
 };
+// Get employees by search query
+export const searchEmployees = (req, res) => {
+  const { search } = req.query;
+  const query = `
+    SELECT id, fullName FROM employees 
+    WHERE fullName LIKE ?
+    LIMIT 10
+  `;
+  db.query(query, [`%${search}%`], (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+};
+

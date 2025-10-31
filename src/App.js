@@ -31,18 +31,15 @@ export default function App() {
         </Routes>
       ) : (
         <>
-       
           <Header onLogout={handleLogout}/>
-
           <Routes>
-          
             <Route
               path="/"
               element={
                 <div>
                   <Details />
                   <div className="dashboard-layout">
-                    <EmployeesTableDB />
+                    {/* <EmployeesTableDB /> */}
                     <QuickActions />
                   </div>
                   <EmployeesChart/>

@@ -1,10 +1,9 @@
 import React, { useState } from "react";
+import axios from "axios";
 import emailjs from "emailjs-com";
 import Notification from "./Notification";
-import InterviewsTable from "./InterviewsTable";
 import "../style.css";
 import { Link } from "react-router-dom";
-
 
 export default function ScheduleInterview() {
   const [formData, setFormData] = useState({
@@ -15,14 +14,15 @@ export default function ScheduleInterview() {
     interviewMode: "",
     interviewDate: "",
     interviewTime: "",
-    interviewer: "",
+    interviewers: [], // مصفوفة الموظفين المختارين
     location: "",
     duration: "",
     notes: "",
   });
 
+  const [interviewerInput, setInterviewerInput] = useState(""); // input للبحث
+  const [suggestions, setSuggestions] = useState([]);
   const [notification, setNotification] = useState({ message: "", type: "" });
-  const [refreshTrigger, setRefreshTrigger] = useState(0); 
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -31,62 +31,96 @@ export default function ScheduleInterview() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    if (name === "interviewer") {
+      setInterviewerInput(value); // تحديث input البحث
+      if (value) {
+        fetch(`http://localhost:5000/api/employees?search=${value}`)
+          .then((res) => res.json())
+          .then((data) => {
+            const filtered = data.filter(
+              (emp) =>
+                emp.fullName &&
+                emp.fullName.toLowerCase().includes(value.toLowerCase())
+            );
+            setSuggestions(filtered);
+          })
+          .catch((err) => console.error(err));
+      } else {
+        setSuggestions([]);
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleSelect = (emp) => {
+    if (!formData.interviewers.some((e) => e.id === emp.id)) {
+      setFormData({
+        ...formData,
+        interviewers: [...formData.interviewers, emp],
+      });
+    }
+    setInterviewerInput(""); // تفريغ حقل البحث بعد الاختيار
+    setSuggestions([]);
+  };
+
+  const handleRemoveInterviewer = (id) => {
+    setFormData({
+      ...formData,
+      interviewers: formData.interviewers.filter((e) => e.id !== id),
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/interviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      // إرسال الأسماء كاملة في قاعدة البيانات
+     const payload = {
+  ...formData,
+  interviewer: formData.interviewers.map(emp => emp.fullName).join(", "),
+};
+
+
+      await axios.post("http://localhost:5000/api/interviews", payload);
+
+      await emailjs.send(
+        "service_pys19up",
+        "template_h2dhgcy",
+        {
+          to_email: formData.email,
+          name: formData.employeeName,
+          position: formData.department,
+          date: formData.interviewDate,
+          time: formData.interviewTime,
+          location: formData.location,
+        },
+        "Bp5qg8qK9GrKxMucC"
+      );
+
+      showNotification(
+        "success",
+        `Interview scheduled for ${formData.employeeName}! Email sent successfully.`
+      );
+
+      setFormData({
+        employeeName: "",
+        email: "",
+        department: "",
+        interviewType: "",
+        interviewMode: "",
+        interviewDate: "",
+        interviewTime: "",
+        interviewers: [],
+        location: "",
+        duration: "",
+        notes: "",
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        await emailjs.send(
-          "service_pys19up",
-          "template_h2dhgcy",
-          {
-            to_email: formData.email,
-            name: formData.employeeName,
-            position: formData.department,
-            date: formData.interviewDate,
-            time: formData.interviewTime,
-            location: formData.location,
-          },
-          "Bp5qg8qK9GrKxMucC"
-        );
-
-        showNotification(
-          "success",
-          `Interview scheduled for ${formData.employeeName}! Email sent successfully.`
-        );
-
-        setFormData({
-          employeeName: "",
-          email: "",
-          department: "",
-          interviewType: "",
-          interviewMode: "",
-          interviewDate: "",
-          interviewTime: "",
-          interviewer: "",
-          location: "",
-          duration: "",
-          notes: "",
-        });
-
-        setRefreshTrigger((prev) => prev + 1); 
-      } else {
-        showNotification("error", data.error || "Failed to schedule interview.");
-      }
+      setInterviewerInput("");
     } catch (err) {
       console.error(err);
-      showNotification("error", "Server error, please try again.");
+      showNotification("error", "Failed to schedule interview.");
     }
   };
 
@@ -101,6 +135,7 @@ export default function ScheduleInterview() {
       <h2 className="page-title">HR Interview Scheduling System</h2>
 
       <form className="interview-form" onSubmit={handleSubmit}>
+        {/* Candidate Name & Email */}
         <div className="form-row">
           <div className="form-group">
             <label>Candidate Full Name</label>
@@ -112,7 +147,6 @@ export default function ScheduleInterview() {
               required
             />
           </div>
-
           <div className="form-group">
             <label>Email Address</label>
             <input
@@ -126,6 +160,7 @@ export default function ScheduleInterview() {
           </div>
         </div>
 
+        {/* Department & Interview Type */}
         <div className="form-row">
           <div className="form-group">
             <label>Position / Department</label>
@@ -137,23 +172,20 @@ export default function ScheduleInterview() {
               required
             />
           </div>
-
           <div className="form-group">
             <label>Interview Type</label>
-            <select
+            <input
+              type="text"
               name="interviewType"
               value={formData.interviewType}
               onChange={handleChange}
+              placeholder="e.g. Technical / HR"
               required
-            >
-              <option value="">Select type</option>
-              <option value="Technical">Technical</option>
-              <option value="Administrative">Administrative</option>
-              <option value="HR">HR</option>
-            </select>
+            />
           </div>
         </div>
 
+        {/* Interview Mode & Duration */}
         <div className="form-row">
           <div className="form-group">
             <label>Interview Mode</label>
@@ -169,7 +201,6 @@ export default function ScheduleInterview() {
               <option value="Phone Call">Phone Call</option>
             </select>
           </div>
-
           <div className="form-group">
             <label>Duration (minutes)</label>
             <input
@@ -183,6 +214,7 @@ export default function ScheduleInterview() {
           </div>
         </div>
 
+        {/* Date & Time */}
         <div className="form-row">
           <div className="form-group">
             <label>Interview Date</label>
@@ -194,7 +226,6 @@ export default function ScheduleInterview() {
               required
             />
           </div>
-
           <div className="form-group">
             <label>Interview Time</label>
             <input
@@ -207,19 +238,44 @@ export default function ScheduleInterview() {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Interviewer Name</label>
+        {/* Interviewers */}
+        <div className="form-group" style={{ position: "relative" }}>
+          <label>Interviewers</label>
+          <div className="interviewer-input-container">
+            {formData.interviewers.map((emp) => (
+              <span key={emp.id} className="interviewer-chip">
+                {emp.fullName}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveInterviewer(emp.id)}
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
             <input
               type="text"
               name="interviewer"
-              value={formData.interviewer}
+              value={interviewerInput}
               onChange={handleChange}
-              placeholder="HR Officer / Engineer Name"
-              required
+              placeholder="Start typing to select..."
+              autoComplete="off"
+              className="interviewer-input"
             />
           </div>
+          {suggestions.length > 0 && (
+            <ul className="autocomplete-suggestions">
+              {suggestions.map((emp) => (
+                <li key={emp.id} onClick={() => handleSelect(emp)}>
+                  {emp.fullName}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
+        {/* Location & Notes */}
+        <div className="form-row">
           <div className="form-group">
             <label>Location / Meeting Link</label>
             <input
@@ -232,7 +288,6 @@ export default function ScheduleInterview() {
             />
           </div>
         </div>
-
         <div className="form-group">
           <label>Interview Notes</label>
           <textarea
@@ -247,11 +302,9 @@ export default function ScheduleInterview() {
           Schedule Interview & Send Email
         </button>
         <Link to="/interviews" className="view-table-link">
-              View Scheduled Interviews</Link>
+          View Scheduled Interviews
+        </Link>
       </form>
-
-  
-      
     </div>
   );
 }
