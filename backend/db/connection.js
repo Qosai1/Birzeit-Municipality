@@ -1,18 +1,16 @@
-import mysql from "mysql2";
+import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 dotenv.config();
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "",
-  database: process.env.DB_NAME || "bzuarchive",
-});
+const { DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME } = process.env;
 
-db.connect((err) => {
-  if (err) console.error("❌ Database connection failed:", err);
-  else console.log("✅ Connected to MySQL Database");
+const db = mysql.createPool({
+  host: DB_HOST,
+  port: DB_PORT,
+  user: DB_USER,
+  password: DB_PASS,
+  database: DB_NAME,
+  connectionLimit: 10,
 });
 
 export default db;

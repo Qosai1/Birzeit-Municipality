@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  getEmployees,
+  getAllEmployees,
   getEmployeeById,
-  addEmployee,
+  createEmployee,
   updateEmployee,
   deleteEmployee,
-} from "../controllers/employeesController.js";
+} from "../controllers/employeeController.js";
 
 const router = express.Router();
 
 // CRUD endpoints
-router.get("/", getEmployees); // Get all employees
+router.get("/", getAllEmployees); // Get all employees
 router.get("/:id", getEmployeeById); // Get one employee
-router.post("/", addEmployee); // Add new employee
+router.post("/", createEmployee); // Add new employee
 router.put("/:id", updateEmployee); // Edit employee
 router.delete("/:id", deleteEmployee); // Delete employee
 
