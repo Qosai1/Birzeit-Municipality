@@ -131,6 +131,18 @@ class Employee {
       throw error;
     }
   }
+
+  static async getByUsername(username) {
+    try {
+      const [rows] = await db.query(
+        "SELECT * FROM employees WHERE username = ? AND isActive = 1",
+        [username]
+      );
+      return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default Employee;

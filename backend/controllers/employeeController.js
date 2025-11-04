@@ -1,9 +1,7 @@
 import Employee from "../models/employee.js";
 import bcrypt from "bcrypt";
 
-// ============================================
 // GET ALL EMPLOYEES
-// ============================================
 export const getAllEmployees = async (req, res) => {
   try {
     // Call model to get data
@@ -21,9 +19,7 @@ export const getAllEmployees = async (req, res) => {
   }
 };
 
-// ============================================
 // GET EMPLOYEE BY ID
-// ============================================
 export const getEmployeeById = async (req, res) => {
   try {
     // Get ID from URL parameters
@@ -51,9 +47,7 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
-// ============================================
 // CREATE NEW EMPLOYEE
-// ============================================
 export const createEmployee = async (req, res) => {
   try {
     // Validate required fields
@@ -104,9 +98,7 @@ export const createEmployee = async (req, res) => {
   }
 };
 
-// ============================================
 // UPDATE EMPLOYEE
-// ============================================
 export const updateEmployee = async (req, res) => {
   try {
     const id = req.params.id;
@@ -143,9 +135,7 @@ export const updateEmployee = async (req, res) => {
   }
 };
 
-// ============================================
 // DELETE EMPLOYEE (Soft Delete)
-// ============================================
 export const deleteEmployee = async (req, res) => {
   try {
     const id = req.params.id;

@@ -14,9 +14,7 @@ export const getAllInterviews = async (req, res) => {
   }
 };
 
-// ============================================
 // GET INTERVIEW BY ID
-// ============================================
 export const getInterviewById = async (req, res) => {
   try {
     const interview = await ScheduleInterview.getById(req.params.id);
@@ -38,9 +36,7 @@ export const getInterviewById = async (req, res) => {
   }
 };
 
-// ============================================
 // CREATE NEW INTERVIEW
-// ============================================
 export const createInterview = async (req, res) => {
   try {
     // Validate required fields
@@ -69,9 +65,7 @@ export const createInterview = async (req, res) => {
   }
 };
 
-// ============================================
 // UPDATE INTERVIEW
-// ============================================
 export const updateInterview = async (req, res) => {
   try {
     const affectedRows = await ScheduleInterview.update(
@@ -99,9 +93,7 @@ export const updateInterview = async (req, res) => {
   }
 };
 
-// ============================================
 // DELETE INTERVIEW
-// ============================================
 export const deleteInterview = async (req, res) => {
   try {
     const affectedRows = await ScheduleInterview.delete(req.params.id);
@@ -126,9 +118,7 @@ export const deleteInterview = async (req, res) => {
   }
 };
 
-// ============================================
 // GET INTERVIEWS BY DATE RANGE
-// ============================================
 export const getInterviewsByDateRange = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -160,9 +150,7 @@ export const getInterviewsByDateRange = async (req, res) => {
   }
 };
 
-// ============================================
 // GET INTERVIEWS BY DEPARTMENT
-// ============================================
 export const getInterviewsByDepartment = async (req, res) => {
   try {
     const interviews = await ScheduleInterview.getByDepartment(
@@ -183,9 +171,7 @@ export const getInterviewsByDepartment = async (req, res) => {
   }
 };
 
-// ============================================
 // GET INTERVIEWS BY INTERVIEWER
-// ============================================
 export const getInterviewsByInterviewer = async (req, res) => {
   try {
     const interviews = await ScheduleInterview.getByInterviewer(
@@ -206,9 +192,7 @@ export const getInterviewsByInterviewer = async (req, res) => {
   }
 };
 
-// ============================================
 // GET UPCOMING INTERVIEWS
-// ============================================
 export const getUpcomingInterviews = async (req, res) => {
   try {
     const interviews = await ScheduleInterview.getUpcoming();
