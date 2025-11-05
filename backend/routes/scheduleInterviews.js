@@ -9,8 +9,8 @@ import {
 import { verifyToken, checkRole } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
-router.use(verifyToken);
-router.use(checkRole("HR"));
+//router.use(verifyToken);
+//router.use(checkRole("HR"));
 
 // CRUD endpoints
 router.get("/", getAllInterviews); // Get all interviews
