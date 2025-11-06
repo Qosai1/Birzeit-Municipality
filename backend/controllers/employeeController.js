@@ -162,3 +162,61 @@ export const deleteEmployee = async (req, res) => {
     });
   }
 };
+
+
+
+// =========================
+// Login Employee
+// =========================
+
+export const loginEmployee = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // تحقق من القيم المطلوبة
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
+    }
+
+    // جلب المستخدم من قاعدة البيانات
+    const employee = await Employee.getByUsername(username);
+
+    // إذا المستخدم مش موجود
+    if (!employee) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password",
+      });
+    }
+
+    // مقارنة الباسورد المُدخل مع المشفّر
+    const isMatch = await bcrypt.compare(password, employee.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password",
+      });
+    }
+
+    // نحذف الحقول الحساسة (username و password)
+    const { password: _, username: __, ...safeEmployee } = employee;
+
+    // نرجع بقية الحقول
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: safeEmployee,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during login",
+      error: error.message,
+    });
+  }
+};

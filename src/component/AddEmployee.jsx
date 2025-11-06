@@ -215,9 +215,9 @@ export default function AddEmployee() {
         <label>
           Role:
           <select name="role" value={formData.role} onChange={handleChange}>
-            <option value="employee">Employee</option>
-            <option value="hr">HR</option>
-            <option value="admin">Admin</option>
+            <option value="Employee">Employee</option>
+            <option value="HR">HR</option>
+            <option value="Admin">Admin</option>
           </select>
         </label>
 

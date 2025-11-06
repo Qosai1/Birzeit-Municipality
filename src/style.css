@@ -942,7 +942,7 @@ border-color: #2563eb;
 }
 .calendar-container {
   width: 600px;
-  height: 600px; /* المربع المطلوب */
+  height: 600px;
   margin: 50px auto;
   padding: 16px;
   background: #ffffff;
@@ -955,7 +955,7 @@ border-color: #2563eb;
 }
 
 .fullcalendar {
-  flex: 1; /* يملأ كل ارتفاع الحاوية */
+  flex: 1; 
   min-height: 0; 
   overflow: auto;
 }
@@ -989,3 +989,72 @@ border-color: #2563eb;
   font-size: 0.8rem;
 }
 
+
+.file-upload-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.upload-btn {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 10px;
+  transition: 0.2s;
+  font-size: 16px;
+}
+
+.upload-btn:hover {
+  background-color: #0056b3;
+}
+
+.upload-btn.folder {
+  background-color: #28a745;
+}
+
+.upload-btn.folder:hover {
+  background-color: #1e7e34;
+}
+
+.preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.image-preview {
+  text-align: center;
+}
+
+.preview-img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.preview-name {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.notification.success {
+  color: green;
+  font-weight: bold;
+}
+
+.notification.warning {
+  color: red;
+  font-weight: bold;
+}

@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import employeesRoutes from "./routes/employees.js";
 import interviewRoutes from "./routes/scheduleInterviews.js";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 app.use(cors());

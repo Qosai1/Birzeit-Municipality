@@ -1,65 +1,63 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import Header from "./component/Header";
-import Details from "./component/details";
-import AddEmployee from "./component/AddEmployee";
-import QuickActions from "./component/QuickActions";
-import Profile from "./component/Profile";
-import EmployeesTableDB from "./component/EmployeesTableDB";
 import Login from "./component/LogIn";
-import ScheduleInterview from "./component/Schedule Interview";
-import EmployeesTable from "./component/EmployeesTable";
-import EmployeesChart from "./component/EmployeesChart";
-import InterviewsTable from "./component/InterviewsTable";
-import InterviewCalendar from "./component/InterviewCalendar";
+import HrDashboard from "./component/HrDashboard";
+import EmployeeDashboard from "./component/EmployeeDashboard";
+import AdminDashboard from "./component/AdminDashboard";
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
+  // ✅ تحميل المستخدم من localStorage عند تشغيل التطبيق
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Error parsing stored user:", error);
+      localStorage.removeItem("user");
+    }
+  }, []);
+
+  // ✅ عند تسجيل الدخول
+  const handleLogin = (loggedUser) => {
+    setUser(loggedUser);
+    localStorage.setItem("user", JSON.stringify(loggedUser));
   };
-    const handleLogout = () => {
-    setIsLoggedIn(false);
+
+  // ✅ عند تسجيل الخروج
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
   };
+
   return (
     <>
-   
-      {!isLoggedIn ? (
+      {!user ? (
+        // 👤 المستخدم غير مسجل الدخول → صفحة تسجيل الدخول فقط
         <Routes>
           <Route path="*" element={<Login onLogin={handleLogin} />} />
         </Routes>
       ) : (
+        // ✅ بعد تسجيل الدخول
         <>
-       
-          <Header onLogout={handleLogout}/>
+          <Header onLogout={handleLogout} user={user} />
 
           <Routes>
-          
-            <Route
-              path="/"
-              element={
-                <div>
-                  <Details />
-                  <div className="dashboard-layout">
-                    <QuickActions />
-                  </div>
-                  <EmployeesChart/>
-                </div>
-              }
-            />
+            {/* 🧭 إعادة توجيه المستخدم حسب دوره */}
+            <Route path="/" element={<Navigate to={`/${user.role}-dashboard`} />} />
 
-          
-            <Route path="/add" element={<AddEmployee />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/employees" element={<EmployeesTable />} />
-            <Route path="/schedule" element={<ScheduleInterview />} />
-            <Route path="/interviews" element={<InterviewsTable />} />
-            <Route path="/InterviewCalendar" element={<InterviewCalendar />} />
+            {/* ✅ كل Dashboard فيه /* لتفعيل الصفحات الفرعية */}
+            <Route path="/hr-dashboard/*" element={<HrDashboard user={user} />} />
+            <Route path="/employee-dashboard/*" element={<EmployeeDashboard user={user} />} />
+            <Route path="/admin-dashboard/*" element={<AdminDashboard user={user} />} />
 
-
-
-            {/* <Route path="*" element={<Navigate to="/" />} /> */}
+            {/* أي مسار غريب يعيد المستخدم لصفحة الداشبورد الخاصة بدوره */}
+            <Route path="*" element={<Navigate to={`/${user.role}-dashboard`} />} />
           </Routes>
         </>
       )}

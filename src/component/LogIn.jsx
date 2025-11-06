@@ -1,18 +1,40 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaUserCircle } from "react-icons/fa";
 import "../style.css";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (username === "qosai" && password === "1234") {
-      onLogin();
-    } else {
-      alert("Invalid username or password");
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const user = data.user;
+        onLogin(user);
+
+        // توجيه حسب الدور
+        if (user.role === "HR") navigate("/hr-dashboard");
+        else if (user.role === "employee") navigate("/employee-dashboard");
+        else if (user.role === "admin") navigate("/admin-dashboard");
+        else navigate("/");
+      } else {
+        alert(data.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Server error. Try again later.");
     }
   };
 
