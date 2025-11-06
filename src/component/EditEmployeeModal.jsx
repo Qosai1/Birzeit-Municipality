@@ -10,7 +10,7 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
         <h3>Edit Employee</h3>
         <form onSubmit={onSave} className="edit-form">
 
-          {/* ===== المعلومات الأساسية ===== */}
+       
           <label>Full Name</label>
           <input
             type="text"

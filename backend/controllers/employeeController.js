@@ -165,15 +165,12 @@ export const deleteEmployee = async (req, res) => {
 
 
 
-// =========================
 // Login Employee
-// =========================
 
 export const loginEmployee = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // تحقق من القيم المطلوبة
     if (!username || !password) {
       return res.status(400).json({
         success: false,
@@ -181,10 +178,8 @@ export const loginEmployee = async (req, res) => {
       });
     }
 
-    // جلب المستخدم من قاعدة البيانات
     const employee = await Employee.getByUsername(username);
 
-    // إذا المستخدم مش موجود
     if (!employee) {
       return res.status(401).json({
         success: false,
@@ -192,7 +187,6 @@ export const loginEmployee = async (req, res) => {
       });
     }
 
-    // مقارنة الباسورد المُدخل مع المشفّر
     const isMatch = await bcrypt.compare(password, employee.password);
 
     if (!isMatch) {
@@ -202,10 +196,8 @@ export const loginEmployee = async (req, res) => {
       });
     }
 
-    // نحذف الحقول الحساسة (username و password)
     const { password: _, username: __, ...safeEmployee } = employee;
 
-    // نرجع بقية الحقول
     res.status(200).json({
       success: true,
       message: "Login successful",

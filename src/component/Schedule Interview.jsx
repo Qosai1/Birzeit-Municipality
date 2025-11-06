@@ -14,13 +14,13 @@ export default function ScheduleInterview() {
     interviewMode: "",
     interviewDate: "",
     interviewTime: "",
-    interviewers: [], // مصفوفة الموظفين المختارين
+    interviewers: [], 
     location: "",
     duration: "",
     notes: "",
   });
 
-  const [interviewerInput, setInterviewerInput] = useState(""); // input للبحث
+  const [interviewerInput, setInterviewerInput] = useState(""); 
   const [suggestions, setSuggestions] = useState([]);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
@@ -61,7 +61,7 @@ export default function ScheduleInterview() {
         interviewers: [...formData.interviewers, emp],
       });
     }
-    setInterviewerInput(""); // تفريغ حقل البحث بعد الاختيار
+    setInterviewerInput(""); 
     setSuggestions([]);
   };
 
@@ -76,7 +76,7 @@ export default function ScheduleInterview() {
     e.preventDefault();
 
     try {
-      // إرسال الأسماء كاملة في قاعدة البيانات
+    
      const payload = {
   ...formData,
   interviewer: formData.interviewers.map(emp => emp.fullName).join(", "),

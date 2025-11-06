@@ -24,7 +24,6 @@ export default function Login({ onLogin }) {
         const user = data.user;
         onLogin(user);
 
-        // توجيه حسب الدور
         if (user.role === "HR") navigate("/hr-dashboard");
         else if (user.role === "employee") navigate("/employee-dashboard");
         else if (user.role === "admin") navigate("/admin-dashboard");
