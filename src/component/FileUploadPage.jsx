@@ -2,25 +2,33 @@ import React, { useState } from "react";
 import "../style.css";
 
 const FileUploadPage = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [fileDetails, setFileDetails] = useState("");
-  const [fileCategory, setFileCategory] = useState("");
   const [fileDescription, setFileDescription] = useState("");
   const [fileContentDescription, setFileContentDescription] = useState("");
   const [showNotification, setShowNotification] = useState(false);
   const [notificationType, setNotificationType] = useState("");
+  const [isFolderUpload, setIsFolderUpload] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    setSelectedFile(file);
+    const files = event.target.files;
+    setSelectedFiles(files);
 
-    if (file) {
-      setFileDetails(`File Name: ${file.name}, File Size: ${file.size} bytes`);
+    if (files.length > 0) {
+      const details = Array.from(files)
+        .map((file) => `File Name: ${file.name}, File Size: ${file.size} bytes`)
+        .join("\n");
     }
   };
 
   const handleUpload = () => {
-    if (!selectedFile) {
+    if (!fileDescription) {
+      setWarningMessage("Please enter a document title before uploading.");
+      return;
+    }
+
+    if (selectedFiles.length === 0) {
       setNotificationType("warning");
       setShowNotification(true);
       setTimeout(() => {
@@ -36,22 +44,53 @@ const FileUploadPage = () => {
       setShowNotification(false);
     }, 3000);
 
-    alert(`Uploading: ${selectedFile.name}`);
+    alert(`Uploading ${selectedFiles.length} files...`);
   };
 
   return (
     <div className="file-upload-container">
-      <h2>Upload a New File</h2>
+      <h2>Upload Files</h2>
+
+      <div className="form-group upload-option">
+        <label>Choose Upload Option</label>
+        <div className="upload-options">
+          <label
+            className={`upload-option-label ${!isFolderUpload ? "active" : ""}`}
+          >
+            <input
+              type="radio"
+              name="uploadOption"
+              checked={!isFolderUpload}
+              onChange={() => setIsFolderUpload(false)}
+            />
+            Upload Files
+          </label>
+          <label
+            className={`upload-option-label ${isFolderUpload ? "active" : ""}`}
+          >
+            <input
+              type="radio"
+              name="uploadOption"
+              checked={isFolderUpload}
+              onChange={() => setIsFolderUpload(true)}
+            />
+            Upload Folder
+          </label>
+        </div>
+      </div>
 
       <div className="file-upload-box">
         <label htmlFor="file-upload" className="upload-icon">
           <i className="fa fa-cloud-upload-alt" aria-hidden="true"></i>
         </label>
+
         <input
           type="file"
           id="file-upload"
           accept=".pdf, .doc, .docx, .jpg, .png"
           onChange={handleFileChange}
+          multiple={!isFolderUpload}
+          webkitdirectory={isFolderUpload ? "true" : undefined}
           style={{ display: "none" }}
         />
       </div>
@@ -62,47 +101,47 @@ const FileUploadPage = () => {
         </div>
       )}
 
+      {/* Title - Required */}
       <div className="form-group">
-        <label>Document Type</label>
-        <select
-          value={fileCategory}
-          onChange={(e) => setFileCategory(e.target.value)}
-        >
-          <option value="">Select Document Type</option>
-          <option value="pdf">PDF</option>
-          <option value="doc">DOC</option>
-          <option value="jpg">JPG</option>
-          <option value="png">PNG</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Document Title</label>
+        <label>
+          Document Title <span className="required">*</span>
+        </label>
         <input
           type="text"
           value={fileDescription}
           onChange={(e) => setFileDescription(e.target.value)}
           placeholder="Enter the document title"
+          required
         />
       </div>
 
+      {/* Description - Optional */}
       <div className="form-group">
-        <label>Document Content Description</label>
+        <label>
+          Document Content Description{" "}
+          <span className="optional">(Optional)</span>
+        </label>
         <textarea
           value={fileContentDescription}
           onChange={(e) => setFileContentDescription(e.target.value)}
-          placeholder="Enter a description of the document content"
+          placeholder="Enter a description of the document content (Optional)"
         />
       </div>
 
-      <button onClick={handleUpload}>Upload Document</button>
+      {warningMessage && (
+        <div className="warning-message">{warningMessage}</div>
+      )}
+
+      <button className="upload-btn" onClick={handleUpload}>
+        Upload Documents
+      </button>
 
       {showNotification && (
         <div className={`notification ${notificationType}`}>
           <p>
             {notificationType === "warning"
-              ? "Please select a file before uploading!"
-              : "File has been successfully uploaded!"}
+              ? "Please select files before uploading!"
+              : "Files have been successfully uploaded!"}
           </p>
         </div>
       )}

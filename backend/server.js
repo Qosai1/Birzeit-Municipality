@@ -17,7 +17,7 @@ app.use("/api/interviews", interviewRoutes);
 app.use("/api/documents", documentsRoutes);
 
 // All auth endpoints start with /api/auth
-//app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
