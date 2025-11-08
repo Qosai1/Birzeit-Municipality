@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import "../style.css";
 
 const FileUploadPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [fileDetails, setFileDetails] = useState('');
-  const [fileCategory, setFileCategory] = useState('');
-  const [fileDescription, setFileDescription] = useState('');
-  const [fileContentDescription, setFileContentDescription] = useState(''); 
-    const [showNotification, setShowNotification] = useState(false);
-  const [notificationType, setNotificationType] = useState(''); 
+  const [fileDetails, setFileDetails] = useState("");
+  const [fileCategory, setFileCategory] = useState("");
+  const [fileDescription, setFileDescription] = useState("");
+  const [fileContentDescription, setFileContentDescription] = useState("");
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState("");
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0]; 
+    const file = event.target.files[0];
     setSelectedFile(file);
 
     if (file) {
@@ -21,16 +21,15 @@ const FileUploadPage = () => {
 
   const handleUpload = () => {
     if (!selectedFile) {
-    
-      setNotificationType('warning');
+      setNotificationType("warning");
       setShowNotification(true);
       setTimeout(() => {
         setShowNotification(false);
       }, 3000);
-      return; 
+      return;
     }
 
-    setNotificationType('success');
+    setNotificationType("success");
     setShowNotification(true);
 
     setTimeout(() => {
@@ -53,7 +52,7 @@ const FileUploadPage = () => {
           id="file-upload"
           accept=".pdf, .doc, .docx, .jpg, .png"
           onChange={handleFileChange}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
         />
       </div>
 
@@ -90,8 +89,8 @@ const FileUploadPage = () => {
       <div className="form-group">
         <label>Document Content Description</label>
         <textarea
-          value={fileContentDescription} 
-          onChange={(e) => setFileContentDescription(e.target.value)} 
+          value={fileContentDescription}
+          onChange={(e) => setFileContentDescription(e.target.value)}
           placeholder="Enter a description of the document content"
         />
       </div>
@@ -100,7 +99,11 @@ const FileUploadPage = () => {
 
       {showNotification && (
         <div className={`notification ${notificationType}`}>
-          <p>{notificationType === 'warning' ? 'Please select a file before uploading!' : 'File has been successfully uploaded!'}</p>
+          <p>
+            {notificationType === "warning"
+              ? "Please select a file before uploading!"
+              : "File has been successfully uploaded!"}
+          </p>
         </div>
       )}
     </div>
