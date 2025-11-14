@@ -26,10 +26,14 @@ export default function QuickActions() {
       </Link>
       <Link to="/hr-dashboard/Documents" className="action-link Documents">
        <TbReportAnalytics /> Documents </Link>
+         <Link to="/hr-dashboard/DocumentSearch" className="action-link DocumentSearch">
+        <SlCalender />DocumentSearch
+      </Link>
 
       <Link to="/hr-dashboard/calendar" className="action-link calendar">
         <SlCalender /> Interview Calendar
       </Link>
+      
 
       
     </div>

@@ -1165,3 +1165,290 @@ button.upload-btn:hover {
   margin-top: 10px;
   text-align: left;
 }
+/* تعيين إعدادات عامة لجميع العناصر */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* تعيين إعدادات عامة  */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  padding: 20px;
+}
+
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* العنوان في أعلى الصفحة */
+.header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* صندوق البحث */
+.search-box {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  margin-bottom: 15px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* تنسيق للقائمة   */
+select, .date-picker, .search-btn {
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+}
+
+.search-btn {
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.search-btn:hover {
+  background-color: #0056b3;
+}
+
+/* تنسيق نتائج البحث */
+.search-results {
+  margin-top: 30px;
+}
+
+/* تنسيق لبطاقة المستندات */
+.document-card {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.document-card h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.meta-info {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.meta-info .department {
+  margin-right: 20px;
+}
+
+/* تنسيق الحالة (status) */
+.status {
+  font-weight: bold;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.status.draft {
+  background-color: #ffc107;
+  color: #fff;
+}
+
+.status.sent {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.status.archived {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+/* تنسيق زر عرض المستند */
+.view-btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.view-btn:hover {
+  background-color: #0056b3;
+}
+
+/* تنسيق زر البحث */
+.search-btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.search-btn:hover {
+  background-color: #0056b3;
+}
+
+/* تنسيق مربع الفلاتر */
+select, .date-picker {
+  width: 200px;
+}
+
+.date-picker {
+  padding: 10px;
+}
+
+button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+
+.file-upload-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  text-align: center;
+}
+
+h2 {
+  font-size: 24px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.upload-option {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.upload-options {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.upload-option-label {
+  font-size: 16px;
+  padding: 10px 20px;
+  border: 2px solid #007bff;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-option-label.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.upload-icon {
+  display: block;
+  font-size: 40px;
+  color: #007bff;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.file-upload-box {
+  position: relative;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.file-details {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #555;
+  margin-top: 15px;
+  word-wrap: break-word;
+}
+
+button.upload-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+button.upload-btn:hover {
+  background-color: #0056b3;
+}
+
+.notification {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.notification.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.notification.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Required and Optional Styles */
+.required {
+  color: red;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.optional {
+  color: gray;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.warning-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: left;
+}
