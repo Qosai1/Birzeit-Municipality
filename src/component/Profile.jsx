@@ -1,61 +1,68 @@
 import "../style.css";
+import React, { useEffect,useState } from "react";
 import { FaUserCircle, FaEnvelope, FaPhoneAlt, FaIdCard, FaMapMarkerAlt, FaBuilding, FaCalendarAlt, FaMoneyBill } from "react-icons/fa";
 
 export default function Profile() {
-  const employee = {
-    fullName: "Badaha",
-    email: "Badaha@gmail.com",
-    phone: "+970 599 123 456",
-    nationalId: "404132789",
-    address: "Ramallah",
-    department: "HR",
-    startDate: "2021-03-10",
-    salary: "3200",
-  };
+  const [user,setUser] = useState(()=>{
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+      return JSON.parse(storedUser);
+    }
+  });
+  
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+        setUser(JSON.parse(storedUser));
+      }
+    }
+    catch (error) {
+      console.error("Error parsing stored user:", error);
+      localStorage.removeItem("user");
+    }
+  }, []);
+
 
   return (
     <div className="profile-container">
       <div className="profile-card">
         <div className="profile-header">
           <FaUserCircle className="profile-icon" />
-          <h2>{employee.fullName}</h2>
-          <p className="profile-position">{employee.position}</p>
+          <h2>{user.fullName}</h2>
+          <p className="profile-position">{user.position}</p>
         </div>
 
         <div className="profile-info">
           <div className="info-row">
             <FaEnvelope className="info-icon" />
-            <span>{employee.email}</span>
+            <span>{user.email}</span>
           </div>
 
           <div className="info-row">
             <FaPhoneAlt className="info-icon" />
-            <span>{employee.phone}</span>
+            <span>{user.phoneNumber}</span>
           </div>
 
           <div className="info-row">
             <FaIdCard className="info-icon" />
-            <span>{employee.nationalId}</span>
+            <span>{user.nationalId}</span>
           </div>
 
           <div className="info-row">
             <FaMapMarkerAlt className="info-icon" />
-            <span>{employee.address}</span>
+            <span>{user.address}</span>
           </div>
 
           <div className="info-row">
             <FaBuilding className="info-icon" />
-            <span>{employee.department}</span>
+            <span>{user.department}</span>
           </div>
 
           <div className="info-row">
             <FaCalendarAlt className="info-icon" />
-            <span>Started on: {employee.startDate}</span>
-          </div>
-
-          <div className="info-row">
-            <FaMoneyBill className="info-icon" />
-            <span>Salary: ${employee.salary}</span>
+            <span>Started on: {user.startDate}</span>
           </div>
         </div>
       </div>

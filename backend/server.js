@@ -15,21 +15,17 @@ app.use(express.json());
 
 dotenv.config();
 
-// إعداد multer لتخزين الملفات
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // استخدام __dirname للتأكد من المسار الصحيح
-    cb(null, path.join(__dirname, 'uploads')); // هنا يتم تحديد مكان تخزين الملفات
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    // إضافة الوقت الحالي كجزء من اسم الملف لتجنب التكرار
-    cb(null, Date.now() + path.extname(file.originalname)); // ضمان أن كل اسم ملف فريد
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
 const upload = multer({ storage });
 
-// مسار رفع الملفات
 app.post("/api/upload", upload.single("file"), (req, res) => {
   const { fileDescription, fileContentDescription } = req.body;
   const file = req.file;
@@ -38,7 +34,8 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
     return res.status(400).send("No file uploaded.");
   }
 
-  const query = "INSERT INTO documents (file_name, title, description, file_path) VALUES (?, ?, ?, ?)";
+  const query =
+    "INSERT INTO documents (file_name, title, description, file_path) VALUES (?, ?, ?, ?)";
   const values = [
     file.originalname,
     fileDescription,
@@ -56,12 +53,16 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
   });
 });
 
-// جميع المسارات الأخرى
+// All employee endpoints start with /api/employees
 app.use("/api/employees", employeesRoutes);
+// All interview endpoints start with /api/interviews
 app.use("/api/interviews", interviewRoutes);
+// All document endpoints start with /api/documents
 app.use("/api/documents", documentsRoutes);
+
+// All auth endpoints start with /api/auth
 app.use("/api/auth", authRoutes);
 
-// بدء الخادم
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
