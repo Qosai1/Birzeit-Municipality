@@ -130,3 +130,31 @@ export const deleteDocument = async (req, res) => {
     });
   }
 };
+
+// SOFT DELETE document
+export const softDeleteDocument = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const [result] = await Document.softDelete(id);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Document soft-deleted successfully",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error soft-deleting document",
+      error: err.message,
+    });
+  }
+};

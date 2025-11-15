@@ -13,11 +13,10 @@ export default function DocumentsList() {
     }
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      fetchDocuments();
-    }
-  }, [user]);
+ useEffect(() => {
+  if (user) fetchDocuments();
+}, [user]);
+
 
  const fetchDocuments = async () => {
   try {
@@ -25,8 +24,12 @@ export default function DocumentsList() {
     const data = await response.json();
 
     const cleanedData = data.filter(
-      (doc) => doc.department && doc.department.trim() !== ""
-    );
+  (doc) =>
+    doc.department && 
+    doc.department.trim() !== "" &&
+    doc.is_deleted === 0  
+);
+
 
     if (user && user.role === "admin") {
       setDocuments(cleanedData);
@@ -50,7 +53,6 @@ export default function DocumentsList() {
   return;
 }
 
- 
     setDocuments(cleanedData);
 
   } catch (error) {
@@ -77,12 +79,30 @@ export default function DocumentsList() {
       doc.description?.toLowerCase().includes(term) 
     );
   });
+const softDelete = async (id) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/documents/${id}/soft-delete`,
+      { method: "PUT" }
+    );
+
+    if (response.ok) {
+
+      setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+
+      await fetchDocuments();
+    }
+  } catch (error) {
+    console.error("Soft delete error:", error);
+  }
+};
+
+
 
   return (
     <div className="documents-container">
       <h2>Uploaded Documents</h2>
 
-      {/* 🔍 Search Box */}
       <input
         type="text"
         placeholder="Search documents..."
@@ -127,6 +147,12 @@ export default function DocumentsList() {
                   onClick={() => viewFile(doc.file_path)}
                 >
                   View
+                </button>
+                <button
+                  className="delete-btn"
+                  onClick={() => softDelete(doc.id)}
+                >
+                  Delete
                 </button>
                 
               </td>

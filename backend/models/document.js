@@ -125,16 +125,32 @@ class Document {
     }
   }
 
-  static async delete(id) {
-    try {
-      const [result] = await db.query("DELETE FROM documents WHERE id = ?", [
-        id,
-      ]);
-      return result.affectedRows;
-    } catch (err) {
-      throw err;
-    }
+ static async delete(id) {
+  try {
+    const [result] = await db.query(
+      "UPDATE documents SET is_deleted = 1 WHERE id = ?",
+      [id]
+    );
+    return result.affectedRows;
+  } catch (err) {
+    throw err;
   }
 }
+
+static async softDelete(id) {
+  try {
+    const [result] = await db.query(
+      "UPDATE documents SET is_deleted = 1 WHERE id = ?",
+      [id]
+    );
+    return result;
+  } catch (err) {
+    throw err;
+  }
+}
+
+}
+
+
 
 export default Document;
