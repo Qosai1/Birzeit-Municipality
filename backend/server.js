@@ -8,39 +8,58 @@ import db from "./db/connection.js";
 import multer from "multer";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// لحل مشكلة __dirname في ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-dotenv.config();
+// ⭐⭐ أهم سطر لتصحيح مشكلة Cannot GET /uploads ⭐⭐
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// إعداد multer لتخزين الملفات
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, path.join(__dirname, "uploads"));
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, Date.now() + path.extname(file.originalname)); // اسم فريد
   },
 });
 
 const upload = multer({ storage });
 
+// 📌 API رفع الملفات
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  const { fileDescription, fileContentDescription } = req.body;
+  const { fileDescription, fileContentDescription, employee_name, employee_id, department } = req.body;
   const file = req.file;
 
   if (!file) {
     return res.status(400).send("No file uploaded.");
   }
 
-  const query =
-    "INSERT INTO documents (file_name, title, description, file_path) VALUES (?, ?, ?, ?)";
+  // تخزين المسار الصحيح في قاعدة البيانات
+  const filePath = `uploads/${file.filename}`;
+
+  const query = `
+    INSERT INTO documents (file_name, title, description, file_path, employee_name, employee_id, department)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
   const values = [
     file.originalname,
-    fileDescription,
+    fileDescription || "",
     fileContentDescription || "",
-    file.path,
+    `uploads/${file.filename}`,
+    employee_name || "",
+    employee_id || null,
+    department || "",
   ];
 
   db.query(query, values, (err, result) => {
@@ -53,16 +72,12 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
   });
 });
 
-// All employee endpoints start with /api/employees
+// جميع المسارات الأخرى
 app.use("/api/employees", employeesRoutes);
-// All interview endpoints start with /api/interviews
 app.use("/api/interviews", interviewRoutes);
-// All document endpoints start with /api/documents
 app.use("/api/documents", documentsRoutes);
-
-// All auth endpoints start with /api/auth
 app.use("/api/auth", authRoutes);
 
-// Start server
+// بدء الخادم
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -33,48 +33,51 @@ class Document {
   }
 
   static async create(documentData) {
-    try {
-      const {
-        file_name,
-        title,
-        description,
-        file_path,
-        employee_name,
-        employee_id,
-        department,
-      } = documentData;
+  try {
+    const {
+      file_name,
+      title,
+      description,
+      file_path,
+      employee_name,
+      employee_id,
+      department,
+      uploaded_at 
+    } = documentData;
 
-      const [empRows] = await db.query(
-        "SELECT id FROM employees WHERE id = ?",
-        [employee_id]
-      );
-      if (!empRows.length) throw new Error("Employee ID does not exist");
+    const [empRows] = await db.query(
+      "SELECT id FROM employees WHERE id = ?",
+      [employee_id]
+    );
+    if (!empRows.length) throw new Error("Employee ID does not exist");
 
-      const palestineTime = moment()
-        .tz("Asia/Jerusalem")
-        .format("YYYY-MM-DD HH:mm:ss");
+   
+    const palestineTime = uploaded_at
+      ? uploaded_at
+      : moment().tz("Asia/Jerusalem").format("YYYY-MM-DD HH:mm:ss");
 
-      const sql = `
-        INSERT INTO documents
-        (file_name, title, description, file_path, employee_name, employee_id, department, uploaded_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const [result] = await db.query(sql, [
-        file_name,
-        title,
-        description,
-        file_path,
-        employee_name,
-        employee_id,
-        department,
-        palestineTime,
-      ]);
+    const sql = `
+      INSERT INTO documents
+      (file_name, title, description, file_path, employee_name, employee_id, department, uploaded_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const [result] = await db.query(sql, [
+      file_name,
+      title,
+      description,
+      file_path,
+      employee_name,
+      employee_id,
+      department,
+      palestineTime,
+    ]);
 
-      return result.insertId;
-    } catch (err) {
-      throw err;
-    }
+    return result.insertId;
+  } catch (err) {
+    throw err;
   }
+}
+
 
   static async update(id, documentData) {
     try {

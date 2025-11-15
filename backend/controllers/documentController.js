@@ -39,21 +39,46 @@ export const getDocumentById = async (req, res) => {
 // create new document
 export const createDocument = async (req, res) => {
   try {
-    const documentData = req.body;
-    const newDocument = await Document.create(documentData);
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
+    const file = req.file;
+
+    const {
+      title,
+      description,
+      employee_name,
+      employee_id,
+      department,
+      uploaded_at  
+    } = req.body;
+
+    const documentData = {
+      file_name: file.originalname,
+      file_path: file.path,
+      title,
+      description,
+      employee_name,
+      employee_id,
+      department,
+      uploaded_at 
+    };
+
+    const newDocId = await Document.create(documentData);
+
     res.status(201).json({
       success: true,
       message: "Document created successfully",
-      document_id: newDocument,
+      document_id: newDocId,
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Error creating document",
-      error: err.message,
+      message: err.message,
     });
   }
 };
+
 
 // update document
 export const updateDocument = async (req, res) => {

@@ -9,6 +9,7 @@ import QuickActions from "../component/QuickActions";
 import Details from "./details";
 import EmployeesChart from "../component/EmployeesChart";
 import FileUploadPage from "./FileUploadPage";
+import DocumentsList from "./DocumentsList";
 
 export default function HrDashboard({ user }) {
   return (
@@ -22,7 +23,10 @@ export default function HrDashboard({ user }) {
               <div>
                 <Details user={user} />
                 <QuickActions />
+               
                 <EmployeesChart />
+                <DocumentsList />
+              
               </div>
             }
           />

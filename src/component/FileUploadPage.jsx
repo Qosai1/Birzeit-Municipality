@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../style.css";
+import Notification from "./Notification"; 
 
 const FileUploadPage = () => {
   const [selectedFiles, setSelectedFiles] = useState(null);
@@ -9,14 +10,23 @@ const FileUploadPage = () => {
   const [notificationType, setNotificationType] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
   const [isFolderUpload, setIsFolderUpload] = useState(false);
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
-  // دالة لاختيار الملفات
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const handleFileChange = (event) => {
     const files = event.target.files;
     setSelectedFiles(files[0]);
   };
 
-  // دالة لتحميل الملف إلى الخادم
   const handleUpload = async () => {
     if (!fileDescription) {
       setNotificationType("warning");
@@ -36,6 +46,11 @@ const FileUploadPage = () => {
     formData.append("file", selectedFiles);
     formData.append("fileDescription", fileDescription);
     formData.append("fileContentDescription", fileContentDescription);
+    formData.append("employee_name", user.fullName);
+    formData.append("employee_id", user.id);
+    formData.append("department", user.department);
+    const uploadedAt = new Date().toISOString().slice(0, 19).replace("T", " ");
+    formData.append("uploaded_at", uploadedAt);
 
     try {
       const response = await fetch("http://localhost:5000/api/upload", {
@@ -63,7 +78,6 @@ const FileUploadPage = () => {
     <div className="file-upload-container">
       <h2>Upload Files</h2>
 
-      {/* خيار رفع الملف أو المجلد */}
       <div className="form-group upload-option">
         <label>Choose Upload Option</label>
         <div className="upload-options">
@@ -78,6 +92,7 @@ const FileUploadPage = () => {
             />
             Upload File
           </label>
+
           <label
             className={`upload-option-label ${isFolderUpload ? "active" : ""}`}
           >
@@ -131,9 +146,11 @@ const FileUploadPage = () => {
       </button>
 
       {showNotification && (
-        <div className={`notification ${notificationType}`}>
-          <p>{notificationMessage}</p>
-        </div>
+        <Notification
+          type={notificationType}
+          message={notificationMessage}
+          onClose={() => setShowNotification(false)}
+        />
       )}
     </div>
   );

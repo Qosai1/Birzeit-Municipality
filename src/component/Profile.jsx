@@ -11,18 +11,6 @@ export default function Profile() {
     }
   });
   
-  useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
-        setUser(JSON.parse(storedUser));
-      }
-    }
-    catch (error) {
-      console.error("Error parsing stored user:", error);
-      localStorage.removeItem("user");
-    }
-  }, []);
 
 
   return (
