@@ -266,14 +266,15 @@ h5 {
 .action-link.interviews {
   background-color: #fd7e14;
 }
+.action-link.InterviewCalendar{
+  background-color: #0d6efd;
+  color: #000;
+}
 
 .action-link.Documents {
   background-color: #6f42c1;
 }
 
-.action-link.InterviewCalendar {
-  background-color: #007bff;
-}
 
 .dashboard-layout {
   display: flex;
@@ -1440,8 +1441,8 @@ button.upload-btn:hover {
 
 /* documentListTable */
 .documents-container {
-  width: 90%;
-  max-width: 1100px;
+  width: 100%;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
   background: #ffffff;

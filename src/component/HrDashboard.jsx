@@ -23,10 +23,10 @@ export default function HrDashboard({ user }) {
               <div>
                 <Details user={user} />
                 <QuickActions />
-               
+                  <DocumentsList />
                 <EmployeesChart />
-                <DocumentsList />
               
+                
               </div>
             }
           />

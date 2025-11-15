@@ -26,9 +26,23 @@ export default function AddEmployee() {
     setTimeout(() => setNotification({ type: "", message: "" }), 5000);
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+ const handleChange = (e) => {
+  const { name, value } = e.target;
+
+
+  if (name === "department") {
+    let autoRole = "employee";
+
+    if (value === "HR") autoRole = "HR";
+    if (value === "Admin") autoRole = "admin";
+
+    setFormData({ ...formData, department: value, role: autoRole });
+    return;
+  }
+
+  setFormData({ ...formData, [name]: value });
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,15 +116,21 @@ export default function AddEmployee() {
         </label>
 
         <label>
-          Department:
-          <input
-            type="text"
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            required
-          />
-        </label>
+  Department:
+  <select
+    name="department"
+    value={formData.department}
+    onChange={handleChange}
+    required
+    style={{ padding: "6px", borderRadius: "6px", marginLeft: "10px" }}
+  >
+    <option value="">Select Department</option>
+    <option value="HR">HR</option>
+    <option value="Employee">Employee</option>
+    <option value="Admin">Admin</option>
+  </select>
+   </label>
+
 
         <label>
           Date of Birth:
@@ -137,7 +157,7 @@ export default function AddEmployee() {
         <label>
           National ID:
           <input
-            type="text"
+            type="number"
             name="nationalId"
             value={formData.nationalId}
             onChange={handleChange}
@@ -212,14 +232,7 @@ export default function AddEmployee() {
           />
         </label>
 
-        <label>
-          Role:
-          <select name="role" value={formData.role} onChange={handleChange}>
-            <option value="Employee">Employee</option>
-            <option value="HR">HR</option>
-            <option value="Admin">Admin</option>
-          </select>
-        </label>
+      
 
         <button type="submit" className="save-btn">
           Save Employee

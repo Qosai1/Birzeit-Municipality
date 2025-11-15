@@ -50,7 +50,7 @@ export default function Profile() {
 
           <div className="info-row">
             <FaCalendarAlt className="info-icon" />
-            <span>Started on: {user.startDate}</span>
+            <span>{user.startDate?.slice(0, 10)}</span>
           </div>
         </div>
       </div>

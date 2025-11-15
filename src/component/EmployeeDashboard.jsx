@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import FileUploadPage from "./FileUploadPage.jsx";
 import Profile from "../component/Profile.jsx";
+import DocumentsList from "./DocumentsList.jsx";
 
 import "../style.css";
 
@@ -15,6 +16,7 @@ export default function EmployeeDashboard({ user }) {
             <div>
               
               <FileUploadPage />
+              <DocumentsList />
             </div>
           }
         />
