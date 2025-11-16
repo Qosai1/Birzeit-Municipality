@@ -127,7 +127,7 @@ const softDelete = async (id) => {
             <th>Department</th>
             <th>Uploaded By</th>
             <th>Uploaded At</th>
-            <th>View</th>
+            <th>Action</th>
           </tr>
         </thead>
 
@@ -146,7 +146,7 @@ const softDelete = async (id) => {
                   className="view-btn"
                   onClick={() => viewFile(doc.file_path)}
                 >
-                  View
+                  Download
                 </button>
                 <button
                   className="delete-btn"
