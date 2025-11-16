@@ -4,13 +4,10 @@ import moment from "moment-timezone";
 class Document {
   static async getAll() {
     try {
-      const [rows] = await db.query("SELECT * FROM documents");
-      return rows.map((row) => ({
-        ...row,
-        uploaded_at: moment(row.uploaded_at)
-          .tz("Asia/Jerusalem")
-          .format("YYYY-MM-DD HH:mm:ss"),
-      }));
+      const [rows] = await db.query(
+        "SELECT * FROM documents WHERE is_deleted = 0"
+      );
+      return rows;
     } catch (err) {
       throw err;
     }
@@ -18,66 +15,69 @@ class Document {
 
   static async getById(id) {
     try {
-      const [rows] = await db.query("SELECT * FROM documents WHERE id = ?", [
-        id,
-      ]);
+      const [rows] = await db.query(
+        "SELECT * FROM documents WHERE id = ? and is_deleted = 0",
+        [id]
+      );
       if (!rows.length) return null;
       const row = rows[0];
-      row.uploaded_at = moment(row.uploaded_at)
-        .tz("Asia/Jerusalem")
-        .format("YYYY-MM-DD HH:mm:ss");
       return row;
     } catch (err) {
       throw err;
     }
   }
 
-  static async create(documentData) {
-  try {
-    const {
-      file_name,
-      title,
-      description,
-      file_path,
-      employee_name,
-      employee_id,
-      department,
-      uploaded_at 
-    } = documentData;
-
-    const [empRows] = await db.query(
-      "SELECT id FROM employees WHERE id = ?",
-      [employee_id]
-    );
-    if (!empRows.length) throw new Error("Employee ID does not exist");
-
-   
-    const palestineTime = uploaded_at
-      ? uploaded_at
-      : moment().tz("Asia/Jerusalem").format("YYYY-MM-DD HH:mm:ss");
-
-    const sql = `
-      INSERT INTO documents
-      (file_name, title, description, file_path, employee_name, employee_id, department, uploaded_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const [result] = await db.query(sql, [
-      file_name,
-      title,
-      description,
-      file_path,
-      employee_name,
-      employee_id,
-      department,
-      palestineTime,
-    ]);
-
-    return result.insertId;
-  } catch (err) {
-    throw err;
+  static async getAllByDepartment(department) {
+    try {
+      const [rows] = await db.query(
+        "SELECT * FROM documents WHERE department = ? AND is_deleted = 0",
+        [department]
+      );
+      return rows;
+    } catch (err) {
+      throw err;
+    }
   }
-}
 
+  static async create(documentData) {
+    try {
+      const {
+        file_name,
+        title,
+        description,
+        file_path,
+        employee_name,
+        employee_id,
+        department,
+      } = documentData;
+
+      const [empRows] = await db.query(
+        "SELECT id FROM employees WHERE id = ?",
+        [employee_id]
+      );
+      if (!empRows.length) throw new Error("Employee ID does not exist");
+
+      const sql = `
+      INSERT INTO documents
+      (file_name, title, description, file_path, employee_name, employee_id, department)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+      const [result] = await db.query(sql, [
+        file_name,
+        title,
+        description,
+        file_path,
+        employee_name,
+        employee_id,
+        department,
+        palestineTime,
+      ]);
+
+      return result.insertId;
+    } catch (err) {
+      throw err;
+    }
+  }
 
   static async update(id, documentData) {
     try {
@@ -125,32 +125,29 @@ class Document {
     }
   }
 
- static async delete(id) {
-  try {
-    const [result] = await db.query(
-      "UPDATE documents SET is_deleted = 1 WHERE id = ?",
-      [id]
-    );
-    return result.affectedRows;
-  } catch (err) {
-    throw err;
+  static async delete(id) {
+    try {
+      const [result] = await db.query(
+        "UPDATE documents SET is_deleted = 1 WHERE id = ?",
+        [id]
+      );
+      return result.affectedRows;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async softDelete(id) {
+    try {
+      const [result] = await db.query(
+        "UPDATE documents SET is_deleted = 1 WHERE id = ?",
+        [id]
+      );
+      return result;
+    } catch (err) {
+      throw err;
+    }
   }
 }
-
-static async softDelete(id) {
-  try {
-    const [result] = await db.query(
-      "UPDATE documents SET is_deleted = 1 WHERE id = ?",
-      [id]
-    );
-    return result;
-  } catch (err) {
-    throw err;
-  }
-}
-
-}
-
-
 
 export default Document;

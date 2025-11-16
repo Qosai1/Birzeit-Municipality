@@ -14,6 +14,20 @@ export const getAllDocuments = async (req, res) => {
   }
 };
 
+export const getAllDocumentsByDepartment = async (req, res) => {
+  try {
+    const department = req.params.department;
+    const documents = await Document.getAllByDepartment(department);
+    res.status(200).json(documents);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching documents",
+      error: err.message,
+    });
+  }
+};
+
 // get document by id
 export const getDocumentById = async (req, res) => {
   try {
@@ -44,14 +58,8 @@ export const createDocument = async (req, res) => {
 
     const file = req.file;
 
-    const {
-      title,
-      description,
-      employee_name,
-      employee_id,
-      department,
-      uploaded_at  
-    } = req.body;
+    const { title, description, employee_name, employee_id, department } =
+      req.body;
 
     const documentData = {
       file_name: file.originalname,
@@ -61,7 +69,6 @@ export const createDocument = async (req, res) => {
       employee_name,
       employee_id,
       department,
-      uploaded_at 
     };
 
     const newDocId = await Document.create(documentData);
@@ -78,7 +85,6 @@ export const createDocument = async (req, res) => {
     });
   }
 };
-
 
 // update document
 export const updateDocument = async (req, res) => {
@@ -149,7 +155,6 @@ export const softDeleteDocument = async (req, res) => {
       success: true,
       message: "Document soft-deleted successfully",
     });
-
   } catch (err) {
     res.status(500).json({
       success: false,

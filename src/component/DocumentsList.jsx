@@ -13,53 +13,44 @@ export default function DocumentsList() {
     }
   }, []);
 
- useEffect(() => {
-  if (user) fetchDocuments();
-}, [user]);
+  useEffect(() => {
+    if (user) fetchDocuments();
+  }, [user]);
 
+  const fetchDocuments = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/documents");
+      const data = await response.json();
 
- const fetchDocuments = async () => {
-  try {
-    const response = await fetch("http://localhost:5000/api/documents");
-    const data = await response.json();
-
-    const cleanedData = data.filter(
-  (doc) =>
-    doc.department && 
-    doc.department.trim() !== "" &&
-    doc.is_deleted === 0  
-);
-
-
-    if (user && user.role === "admin") {
-      setDocuments(cleanedData);
-      return;
-    }
-
-    if (user && user.role === "HR") {
-      const filtered = cleanedData.filter(
-        (doc) => doc.department === "HR"
+      const cleanedData = data.filter(
+        (doc) =>
+          doc.department && doc.department.trim() !== "" && doc.is_deleted === 0
       );
-      setDocuments(filtered);
-      return;
+
+      if (user && user.role === "admin") {
+        setDocuments(cleanedData);
+        return;
+      }
+
+      if (user && user.role === "HR") {
+        const filtered = cleanedData.filter((doc) => doc.department === "HR");
+        setDocuments(filtered);
+        return;
+      }
+
+      if (user && user.role === "employee") {
+        const filtered = cleanedData.filter(
+          (doc) => doc.department === "employee"
+        );
+        setDocuments(filtered);
+        return;
+      }
+
+      setDocuments(cleanedData);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
     }
-
-
-  if (user && user.role === "employee") {
-  const filtered = cleanedData.filter(
-    (doc) => doc.department === "employee"
-  );
-  setDocuments(filtered);
-  return;
-}
-
-    setDocuments(cleanedData);
-
-  } catch (error) {
-    console.error("Error fetching documents:", error);
-  }
-};
-
+  };
 
   const viewFile = (filePath) => {
     window.open(`http://localhost:5000/${filePath}`, "_blank");
@@ -76,28 +67,25 @@ export default function DocumentsList() {
       doc.title.toLowerCase().includes(term) ||
       doc.employee_name.toLowerCase().includes(term) ||
       doc.department.toLowerCase().includes(term) ||
-      doc.description?.toLowerCase().includes(term) 
+      doc.description?.toLowerCase().includes(term)
     );
   });
-const softDelete = async (id) => {
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/documents/${id}/soft-delete`,
-      { method: "PUT" }
-    );
+  const softDelete = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/documents/${id}/soft-delete`,
+        { method: "PUT" }
+      );
 
-    if (response.ok) {
+      if (response.ok) {
+        setDocuments((prev) => prev.filter((doc) => doc.id !== id));
 
-      setDocuments((prev) => prev.filter((doc) => doc.id !== id));
-
-      await fetchDocuments();
+        await fetchDocuments();
+      }
+    } catch (error) {
+      console.error("Soft delete error:", error);
     }
-  } catch (error) {
-    console.error("Soft delete error:", error);
-  }
-};
-
-
+  };
 
   return (
     <div className="documents-container">
@@ -123,7 +111,7 @@ const softDelete = async (id) => {
           <tr>
             <th>File Name</th>
             <th>Title</th>
-            <th>Description</th> 
+            <th>Description</th>
             <th>Department</th>
             <th>Uploaded By</th>
             <th>Uploaded At</th>
@@ -136,10 +124,10 @@ const softDelete = async (id) => {
             <tr key={doc.id}>
               <td>{doc.file_name}</td>
               <td>{doc.title}</td>
-              <td>{doc.description}</td> 
+              <td>{doc.description}</td>
               <td>{doc.department}</td>
               <td>{doc.employee_name}</td>
-              <td>{doc.uploaded_at}</td>
+              <td>{new Date(doc.uploaded_at).toLocaleString()}</td>
 
               <td className="action-buttons">
                 <button
@@ -154,7 +142,6 @@ const softDelete = async (id) => {
                 >
                   Delete
                 </button>
-                
               </td>
             </tr>
           ))}
