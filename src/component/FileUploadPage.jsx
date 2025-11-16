@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../style.css";
-import Notification from "./Notification"; 
+import Notification from "./Notification";
 
 const FileUploadPage = () => {
   const [selectedFiles, setSelectedFiles] = useState(null);
@@ -49,8 +49,6 @@ const FileUploadPage = () => {
     formData.append("employee_name", user.fullName);
     formData.append("employee_id", user.id);
     formData.append("department", user.department);
-    const uploadedAt = new Date().toISOString().slice(0, 19).replace("T", " ");
-    formData.append("uploaded_at", uploadedAt);
 
     try {
       const response = await fetch("http://localhost:5000/api/upload", {
