@@ -4,80 +4,160 @@ import employeesRoutes from "./routes/employees.js";
 import interviewRoutes from "./routes/scheduleInterviews.js";
 import documentsRoutes from "./routes/documentsRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import db from "./db/connection.js";
-import multer from "multer";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 
-// لحل مشكلة __dirname في ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// const require = createRequire(import.meta.url);
+// let pdfParse;
+
+// try {
+//   const pdfModule = require("pdf-parse");
+//   pdfParse = typeof pdfModule === "function" ? pdfModule : pdfModule.default;
+// } catch (error) {
+//   console.log(
+//     "Note: PDF parsing unavailable. Install with: npm install pdf-parse"
+//   );
+// }
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ⭐⭐ أهم سطر لتصحيح مشكلة Cannot GET /uploads ⭐⭐
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// const uploadsDir = path.join(__dirname, "uploads");
+// if (!fs.existsSync(uploadsDir)) {
+//   fs.mkdirSync(uploadsDir, { recursive: true });
+// }
+// app.use("/uploads", express.static(uploadsDir));
 
-// إعداد multer لتخزين الملفات
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "uploads"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // اسم فريد
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => cb(null, uploadsDir),
+//   filename: (req, file, cb) => {
+//     const uniqueName = `${Date.now()}-${Math.round(
+//       Math.random() * 1e9
+//     )}${path.extname(file.originalname)}`;
+//     cb(null, uniqueName);
+//   },
+// });
 
-const upload = multer({ storage });
+// const upload = multer({
+//   storage,
+//   limits: { fileSize: 10 * 1024 * 1024 },
+//   fileFilter: (req, file, cb) => {
+//     const allowedTypes = /pdf|doc|docx|jpg|jpeg|png|gif|bmp|tiff/;
+//     const extname = allowedTypes.test(
+//       path.extname(file.originalname).toLowerCase()
+//     );
+//     const mimetype = allowedTypes.test(file.mimetype);
 
-// 📌 API رفع الملفات
-app.post("/api/upload", upload.single("file"), (req, res) => {
-  const { fileDescription, fileContentDescription, employee_name, employee_id, department } = req.body;
-  const file = req.file;
+//     if (extname && mimetype) {
+//       cb(null, true);
+//     } else {
+//       cb(new Error("Please upload a PDF, Word document, or image file"));
+//     }
+//   },
+// });
 
-  if (!file) {
-    return res.status(400).send("No file uploaded.");
-  }
+// async function extractWord(filePath) {
+//   try {
+//     const result = await mammoth.extractRawText({ path: filePath });
+//     return result.value || "This document appears to be empty";
+//   } catch (error) {
+//     return `Could not read Word document: ${error.message}`;
+//   }
+// }
 
-  // تخزين المسار الصحيح في قاعدة البيانات
-  const filePath = `uploads/${file.filename}`;
+// async function extractFileContent(filePath, fileName) {
+//   const ext = path.extname(fileName).toLowerCase();
 
-  const query = `
-    INSERT INTO documents (file_name, title, description, file_path, employee_name, employee_id, department)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
+//   try {
+//     if (ext === ".pdf") {
+//       return await extractPDF(filePath);
+//     } else if (ext === ".doc" || ext === ".docx") {
+//       return await extractWord(filePath);
+//     } else if (
+//       [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"].includes(ext)
+//     ) {
+//       return await extractImage(filePath);
+//     } else {
+//       return "This file type is not supported for text extraction";
+//     }
+//   } catch (error) {
+//     return `Could not process this file: ${error.message}`;
+//   }
+// }
 
-  const values = [
-    file.originalname,
-    fileDescription || "",
-    fileContentDescription || "",
-    `uploads/${file.filename}`,
-    employee_name || "",
-    employee_id || null,
-    department || "",
-  ];
+// app.post("/api/upload", upload.single("file"), async (req, res) => {
+//   const {
+//     fileDescription,
+//     fileContentDescription,
+//     employee_name,
+//     employee_id,
+//     department,
+//   } = req.body;
 
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).send("Error uploading file to database.");
-    }
+//   const file = req.file;
+//   if (!file) {
+//     return res.status(400).json({ error: "No file was uploaded" });
+//   }
 
-    res.status(200).send("File uploaded successfully!");
-  });
-});
+//   const filePath = path.join(__dirname, "uploads", file.filename);
 
-// جميع المسارات الأخرى
+//   let extractedText = "";
+//   try {
+//     extractedText = await extractFileContent(filePath, file.originalname);
+//   } catch (err) {
+//     console.error("Error extracting text:", err);
+//     extractedText = "Content extraction was unsuccessful";
+//   }
+
+//   const query = `
+//     INSERT INTO documents
+//     (file_name, title, description, file_path, employee_name, employee_id, department)
+//     VALUES (?, ?, ?, ?, ?, ?, ?)
+//   `;
+
+//   const values = [
+//     file.originalname,
+//     fileDescription || file.originalname,
+//     fileContentDescription || "",
+//     `uploads/${file.filename}`,
+//     employee_name || "",
+//     employee_id || null,
+//     department || "",
+//     extractedText,
+//   ];
+
+//   db.query(query, values, (err, result) => {
+//     if (err) {
+//       console.error("Database error:", err);
+
+//       try {
+//         fs.unlinkSync(filePath);
+//       } catch (unlinkErr) {
+//         console.error("Could not delete file:", unlinkErr);
+//       }
+
+//       return res.status(500).json({ error: "Could not save file to database" });
+//     }
+//     console.log("extracted test: ", extractedText);
+//     res.status(200).json({
+//       message: "File uploaded successfully",
+//       fileId: result.insertId,
+//       fileName: file.originalname,
+//       extractedText:
+//         extractedText.substring(0, 200) +
+//         (extractedText.length > 200 ? "..." : ""),
+//     });
+//   });
+// });
+
 app.use("/api/employees", employeesRoutes);
 app.use("/api/interviews", interviewRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/auth", authRoutes);
 
-// بدء الخادم
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

@@ -1,4 +1,10 @@
 import Document from "../models/document.js";
+import fs from "fs";
+import { createRequire } from "module";
+
+// Fix for pdf-parse CommonJS import
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse");
 
 // get all documents
 export const getAllDocuments = async (req, res) => {
@@ -44,7 +50,6 @@ export const getDocumentById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching document",
-
       error: err.message,
     });
   }
@@ -86,57 +91,6 @@ export const createDocument = async (req, res) => {
   }
 };
 
-// update document
-export const updateDocument = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const documentData = req.body;
-    const affectedRows = await Document.update(id, documentData);
-    if (affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Document not found or no changes made",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "Document updated successfully",
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-
-      message: "Error updating document",
-      error: err.message,
-    });
-  }
-};
-
-// delete document
-export const deleteDocument = async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    const affectedRows = await Document.delete(id);
-    if (affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Document not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "Document deleted successfully",
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Error deleting document",
-      error: err.message,
-    });
-  }
-};
-
 // SOFT DELETE document
 export const softDeleteDocument = async (req, res) => {
   try {
@@ -160,6 +114,56 @@ export const softDeleteDocument = async (req, res) => {
       success: false,
       message: "Error soft-deleting document",
       error: err.message,
+    });
+  }
+};
+
+export const uploadFile = async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+  const file = req.file;
+
+  const filePath = file.path;
+
+  const { title, description, employee_name, employee_id, department } =
+    req.body;
+
+  const documentData = {
+    file_name: file.originalname,
+    file_path: filePath,
+    title,
+    description,
+    employee_name,
+    employee_id,
+    department,
+  };
+
+  try {
+    const extractedText = await Document.extractFile(
+      filePath,
+      req.file.originalname
+    );
+
+    await Document.create(documentData);
+
+    res.json({
+      success: true,
+      fileName: req.file.originalname,
+      extractedText,
+    });
+    console.log("extracted text: ", extractedText);
+  } catch (error) {
+    console.error("File upload error:", error);
+
+    // Clean up file even if there's an error
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    res.status(500).json({
+      success: false,
+      error: "Error processing file",
+      message: error.message,
     });
   }
 };

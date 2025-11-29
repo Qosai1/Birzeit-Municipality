@@ -44,17 +44,20 @@ const FileUploadPage = () => {
 
     const formData = new FormData();
     formData.append("file", selectedFiles);
-    formData.append("fileDescription", fileDescription);
-    formData.append("fileContentDescription", fileContentDescription);
+    formData.append("title", fileDescription);
+    formData.append("descriptionSS", fileContentDescription);
     formData.append("employee_name", user.fullName);
     formData.append("employee_id", user.id);
     formData.append("department", user.department);
 
     try {
-      const response = await fetch("http://localhost:5000/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/documents/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (response.ok) {
         setNotificationType("success");
