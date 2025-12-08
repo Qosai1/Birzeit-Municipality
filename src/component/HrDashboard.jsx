@@ -10,6 +10,7 @@ import Details from "./details";
 import EmployeesChart from "../component/EmployeesChart";
 import FileUploadPage from "./FileUploadPage";
 import DocumentsList from "./DocumentsList";
+import Messages from "./Messages";
 
 export default function HrDashboard({ user }) {
   return (
@@ -23,9 +24,9 @@ export default function HrDashboard({ user }) {
               <div>
                 <Details user={user} />
                 <QuickActions />
-                  <DocumentsList />
-                <EmployeesChart />
               
+                <EmployeesChart />
+             
                 
               </div>
             }
@@ -39,6 +40,8 @@ export default function HrDashboard({ user }) {
           <Route path="calendar" element={<InterviewCalendar />} />
           <Route path="Documents" element={<FileUploadPage />} />
           <Route path="profile" element={<Profile user={user} />} />
+          <Route path="messages" element={<Messages user={user} />} />
+
         </Routes>
       </div>
     </div>

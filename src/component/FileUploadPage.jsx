@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../style.css";
 import Notification from "./Notification";
+import DocumentsList from "./DocumentsList";
 
 const FileUploadPage = () => {
   const [selectedFiles, setSelectedFiles] = useState(null);
@@ -73,6 +74,7 @@ const FileUploadPage = () => {
   };
 
   return (
+    <>
     <div className="file-upload-container">
       <h2>Upload Files</h2>
 
@@ -150,7 +152,12 @@ const FileUploadPage = () => {
           onClose={() => setShowNotification(false)}
         />
       )}
+     
     </div>
+    <div>
+      <DocumentsList />
+    </div>
+    </>
   );
 };
 

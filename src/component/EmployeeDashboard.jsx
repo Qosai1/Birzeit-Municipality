@@ -1,8 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import FileUploadPage from "./FileUploadPage.jsx";
 import Profile from "../component/Profile.jsx";
-import DocumentsList from "./DocumentsList.jsx";
-
+import Messages from "./Messages.jsx";
 import "../style.css";
 
 export default function EmployeeDashboard({ user }) {
@@ -16,10 +15,11 @@ export default function EmployeeDashboard({ user }) {
             <div>
               
               <FileUploadPage />
-              <DocumentsList />
+            
             </div>
           }
         />
+          <Route path="messages" element={<Messages user={user} />} />
         <Route path="profile" element={<Profile user={user} />} />
       </Routes>
     </div>

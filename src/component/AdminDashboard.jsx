@@ -1,8 +1,24 @@
-export default function AdminDashboard() {
+import FileUploadPage from './FileUploadPage';
+import { Routes, Route } from "react-router-dom";
+import Profile from "../component/Profile.jsx";
+import Messages from "./Messages.jsx";
+export default function AdminDashboard({ user }) {
   return (
     <div>
-      <h1>Admin Dashboard</h1>
-      <p>Welcome Admin! Manage users and system configurations.</p>
+     <Routes>
+        <Route
+          index
+          element={
+            <div>
+              
+              <FileUploadPage />
+            
+            </div>
+          }
+        />
+          <Route path="messages" element={<Messages user={user} />} />
+        <Route path="profile" element={<Profile user={user} />} />
+      </Routes>
     </div>
   );
 }

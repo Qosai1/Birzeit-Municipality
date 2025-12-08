@@ -137,7 +137,7 @@ class Document {
     }
   }
 
-  static async softDelete(id) {
+  static async softDelete(id) {``
     try {
       const [result] = await db.query(
         "UPDATE documents SET is_deleted = 1 WHERE id = ?",

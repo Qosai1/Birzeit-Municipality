@@ -3,7 +3,7 @@ import { loginEmployee } from "../controllers/employeeController.js";
 
 const router = express.Router();
 
-// ✅ Login endpoint
+//  Login endpoint
 router.post("/login", loginEmployee);
 
 export default router;
