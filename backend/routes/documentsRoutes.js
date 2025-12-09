@@ -8,6 +8,9 @@ import {
   getAllDocumentsByDepartment,
   softDeleteDocument,
   uploadFile,
+  searchDocuments,
+  semanticSearchDocuments,
+  generateAllEmbeddings,
 } from "../controllers/documentController.js";
 
 // Storage with original extension
@@ -32,5 +35,12 @@ router.get("/department/:department", getAllDocumentsByDepartment);
 router.post("/", createDocument); // Add new document
 router.put("/:id/soft-delete", softDeleteDocument);
 router.post("/upload", upload.single("file"), uploadFile); // File upload and text extraction
+
+// ========== Search Routes 🔍 ==========
+router.get("/search/text", searchDocuments);
+router.get("/search/semantic", semanticSearchDocuments);
+
+// ========== Admin Routes 🔧 ==========
+router.get("/admin/generate-embeddings", generateAllEmbeddings);
 
 export default router;

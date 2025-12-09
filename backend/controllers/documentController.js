@@ -1,4 +1,4 @@
-import Document from "../models/document.js";
+import Document, { documentInstance } from "../models/document.js";
 import fs from "fs";
 import { createRequire } from "module";
 
@@ -118,13 +118,17 @@ export const softDeleteDocument = async (req, res) => {
   }
 };
 
+// ========== Upload File + MeiliSearch + Embeddings ==========
 export const uploadFile = async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      error: "No file uploaded",
+    });
+  }
 
   const file = req.file;
-
   const filePath = file.path;
-
   const { title, description, employee_name, employee_id, department } =
     req.body;
 
@@ -139,23 +143,49 @@ export const uploadFile = async (req, res) => {
   };
 
   try {
+    // 1. استخراج النص
     const extractedText = await Document.extractFile(
       filePath,
-      req.file.originalname
+      file.originalname
     );
 
-    await Document.create(documentData);
+    // 2. حفظ في DB
+    const newDocId = await Document.create(documentData);
+
+    // 3. جلب الوثيقة
+    const doc = await Document.getById(newDocId);
+
+    // 4. إضافة لـ MeiliSearch
+    await documentInstance.addToMeiliSearch(doc, extractedText);
+
+    // 5. توليد Embedding (في الخلفية)
+    setTimeout(async () => {
+      try {
+        const fullText = `${title} ${
+          description || ""
+        } ${extractedText}`.substring(0, 5000);
+        if (fullText.trim().length > 0) {
+          const embedding = await documentInstance.generateEmbedding(fullText);
+          await documentInstance.saveEmbedding(newDocId, embedding);
+          console.log(`✓ Embedding generated for document ${newDocId}`);
+          console.log("Embedding preview:", embedding.slice(0, 5));
+        }
+      } catch (err) {
+        console.error(`⚠️  Embedding failed for doc ${newDocId}:`, err.message);
+      }
+    }, 0);
 
     res.json({
       success: true,
-      fileName: req.file.originalname,
+      document_id: newDocId,
+      fileName: file.originalname,
       extractedText,
     });
-    console.log("extracted text: ", extractedText);
-  } catch (error) {
-    console.error("File upload error:", error);
 
-    // Clean up file even if there's an error
+    console.log("✓ Extracted text: ", extractedText.substring(0, 200));
+  } catch (error) {
+    console.error("❌ File upload error:", error);
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
@@ -164,6 +194,96 @@ export const uploadFile = async (req, res) => {
       success: false,
       error: "Error processing file",
       message: error.message,
+    });
+  }
+};
+
+// ========== البحث النصي ==========
+export const searchDocuments = async (req, res) => {
+  try {
+    const { query, limit, offset, filter } = req.query;
+
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    const results = await documentInstance.search(query, {
+      limit: parseInt(limit) || 20,
+      offset: parseInt(offset) || 0,
+      filter: filter || null,
+    });
+
+    res.status(200).json({
+      success: true,
+      search_type: "text",
+      query: query,
+      results: results.hits,
+      total_hits: results.totalHits,
+      processing_time_ms: results.processingTime,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error searching documents",
+      error: err.message,
+    });
+  }
+};
+
+// ========== البحث الدلالي ==========
+export const semanticSearchDocuments = async (req, res) => {
+  try {
+    const { query, limit, filter } = req.query;
+
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    console.log(`🧠 Semantic search: "${query}"`);
+
+    const results = await documentInstance.semanticSearch(query, {
+      limit: parseInt(limit) || 20,
+      filter: filter || null,
+    });
+
+    res.status(200).json({
+      success: true,
+      search_type: "semantic",
+      query: query,
+      results: results.hits,
+      total_hits: results.totalHits,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error performing semantic search",
+      error: err.message,
+    });
+  }
+};
+
+// ========== توليد Embeddings لكل الوثائق ==========
+export const generateAllEmbeddings = async (req, res) => {
+  try {
+    console.log("⏳ Generating embeddings...");
+    const count = await documentInstance.generateAllEmbeddings();
+
+    res.status(200).json({
+      success: true,
+      message: `Generated embeddings for ${count} documents`,
+      count: count,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error generating embeddings",
+      error: err.message,
     });
   }
 };
