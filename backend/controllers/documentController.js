@@ -166,8 +166,18 @@ export const uploadFile = async (req, res) => {
         } ${extractedText}`.substring(0, 5000);
         if (fullText.trim().length > 0) {
           const embedding = await documentInstance.generateEmbedding(fullText);
-          await documentInstance.saveEmbedding(newDocId, embedding);
-          console.log(`✓ Embedding generated for document ${newDocId}`);
+          // Pass document metadata for Elasticsearch
+          await documentInstance.saveEmbedding(newDocId, embedding, {
+            title: title,
+            description: description,
+            file_name: file.originalname,
+            department: department,
+            employee_id: employee_id,
+            created_at: doc.created_at,
+          });
+          console.log(
+            `✓ Embedding generated and saved to Elasticsearch for document ${newDocId}`
+          );
           console.log("Embedding preview:", embedding.slice(0, 5));
         }
       } catch (err) {
@@ -247,9 +257,23 @@ export const semanticSearchDocuments = async (req, res) => {
 
     console.log(`🧠 Semantic search: "${query}"`);
 
+    // Parse filter if provided (expects JSON string)
+    let parsedFilter = null;
+    if (filter) {
+      try {
+        parsedFilter = typeof filter === "string" ? JSON.parse(filter) : filter;
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid filter format. Expected JSON string.",
+          error: err.message,
+        });
+      }
+    }
+
     const results = await documentInstance.semanticSearch(query, {
       limit: parseInt(limit) || 20,
-      filter: filter || null,
+      filter: parsedFilter,
     });
 
     res.status(200).json({

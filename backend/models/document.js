@@ -8,6 +8,10 @@ import { parse } from "csv-parse/sync";
 import pdfParse from "pdf-parse-fixed";
 import { MeiliSearch } from "meilisearch";
 import { pipeline } from "@xenova/transformers";
+import elasticClient, {
+  testConnection,
+  initializeEmbeddingsIndex,
+} from "../db/elasticsearch.js";
 
 class Document {
   constructor() {
@@ -16,8 +20,37 @@ class Document {
       apiKey: process.env.MEILISEARCH_API_KEY || "masterKey",
     });
     this.indexName = "documents";
+    this.elasticIndexName = "document_embeddings";
     this.embedder = null;
     this.maxFileSize = 50 * 1024 * 1024; // 50MB
+    this.elasticInitialized = false;
+  }
+
+  // ========== Elasticsearch Initialization ==========
+  async initializeElasticsearch() {
+    if (this.elasticInitialized) return true;
+
+    try {
+      const connected = await testConnection();
+      if (!connected) {
+        console.warn(
+          "⚠️  Elasticsearch is not available. Semantic search will be disabled."
+        );
+        console.warn("   Text search (MeiliSearch) will still work.");
+        return false;
+      }
+
+      await initializeEmbeddingsIndex();
+      this.elasticInitialized = true;
+      console.log("✓ Elasticsearch initialized for embeddings");
+      return true;
+    } catch (err) {
+      console.warn("⚠️  Elasticsearch initialization error:", err.message);
+      console.warn(
+        "   Semantic search will be disabled, but text search will still work."
+      );
+      return false;
+    }
   }
 
   // ========== MeiliSearch Initialization ==========
@@ -410,44 +443,90 @@ class Document {
     return denominator === 0 ? 0 : dotProduct / denominator;
   }
 
-  // ========== حفظ Embedding في قاعدة البيانات ==========
-  async saveEmbedding(documentId, embedding) {
+  async saveEmbedding(documentId, embedding, documentMetadata = {}) {
     try {
-      const embeddingJSON = JSON.stringify(embedding);
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initializeElasticsearch();
+      if (!initialized) {
+        console.warn(
+          `⚠️  Cannot save embedding for document ${documentId}: Elasticsearch not available`
+        );
+        return false;
+      }
 
-      await db.query(
-        `INSERT INTO document_embeddings (document_id, embedding)
-         VALUES (?, ?)
-         ON DUPLICATE KEY UPDATE embedding = ?`,
-        [documentId, embeddingJSON, embeddingJSON]
+      // Validate embedding
+      if (!Array.isArray(embedding) || embedding.length === 0) {
+        throw new Error("Embedding must be a non-empty array");
+      }
+
+      if (embedding.length !== 384) {
+        console.warn(
+          `⚠️  Embedding dimension mismatch: expected 384, got ${embedding.length}`
+        );
+      }
+
+      // Prepare document for Elasticsearch
+      const doc = {
+        document_id: documentId,
+        embedding: embedding,
+        title: documentMetadata.title || "",
+        description: documentMetadata.description || "",
+        file_name: documentMetadata.file_name || "",
+        department: documentMetadata.department || "",
+        employee_id: documentMetadata.employee_id || null,
+        created_at: documentMetadata.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Use document_id as the document ID in Elasticsearch
+      await elasticClient.index({
+        index: this.elasticIndexName,
+        id: documentId.toString(),
+        body: doc,
+        refresh: true, // Make it immediately searchable
+      });
+
+      console.log(
+        `✓ Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
       );
-
-      console.log(`✓ Embedding saved for document ${documentId}`);
       return true;
     } catch (err) {
-      console.error("✗ Error saving embedding:", err.message);
+      console.error("✗ Error saving embedding to Elasticsearch:", err.message);
       return false;
     }
   }
 
-  // ========== جلب Embedding من قاعدة البيانات ==========
   async getEmbedding(documentId) {
     try {
-      const [rows] = await db.query(
-        "SELECT embedding FROM document_embeddings WHERE document_id = ?",
-        [documentId]
-      );
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initializeElasticsearch();
+      if (!initialized) {
+        return null;
+      }
 
-      if (rows.length === 0) return null;
+      const response = await elasticClient.get({
+        index: this.elasticIndexName,
+        id: documentId.toString(),
+      });
 
-      return JSON.parse(rows[0].embedding);
+      if (!response.found) {
+        return null;
+      }
+
+      return response._source.embedding;
     } catch (err) {
-      console.error("✗ Error getting embedding:", err.message);
+      // If document not found, return null (not an error)
+      if (err.meta?.statusCode === 404) {
+        return null;
+      }
+      console.error(
+        "✗ Error getting embedding from Elasticsearch:",
+        err.message
+      );
       return null;
     }
   }
 
-  // ========== توليد Embeddings لكل الوثائق (يُنفذ مرة واحدة) ==========
   async generateAllEmbeddings() {
     try {
       console.log("⏳ Generating embeddings for all documents...");
@@ -456,14 +535,12 @@ class Document {
       let processed = 0;
 
       for (const doc of documents) {
-        // تحقق إذا كان الـ embedding موجود
         const existingEmbedding = await this.getEmbedding(doc.id);
         if (existingEmbedding) {
           console.log(`⏭️  Document ${doc.id} already has embedding`);
           continue;
         }
 
-        // استخراج النص
         let extractedText = "";
         if (doc.file_path && fs.existsSync(doc.file_path)) {
           try {
@@ -477,7 +554,6 @@ class Document {
           }
         }
 
-        // توليد النص الكامل
         const fullText =
           `${doc.title} ${doc.description} ${extractedText}`.substring(0, 5000);
 
@@ -486,11 +562,17 @@ class Document {
           continue;
         }
 
-        // توليد embedding
         const embedding = await this.generateEmbedding(fullText);
 
-        // حفظه في قاعدة البيانات
-        await this.saveEmbedding(doc.id, embedding);
+        // Pass document metadata for Elasticsearch
+        await this.saveEmbedding(doc.id, embedding, {
+          title: doc.title,
+          description: doc.description,
+          file_name: doc.file_name,
+          department: doc.department,
+          employee_id: doc.employee_id,
+          created_at: doc.created_at,
+        });
 
         processed++;
         console.log(
@@ -506,81 +588,92 @@ class Document {
     }
   }
 
-  // ========== البحث الدلالي المحسّن ==========
   async semanticSearch(query, options = {}) {
     try {
       console.log(`🔍 Semantic search for: "${query}"`);
 
-      // 1. توليد embedding للسؤال
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initializeElasticsearch();
+      if (!initialized) {
+        throw new Error(
+          "Elasticsearch is not available. Please start Elasticsearch to use semantic search."
+        );
+      }
+
+      // Generate embedding for the query
       const queryEmbedding = await this.generateEmbedding(query);
 
-      // 2. البحث النصي الأولي (للتصفية)
-      const textResults = await this.search(query, {
-        limit: options.limit || 50,
-        filter: options.filter,
+      // Build Elasticsearch query with vector search
+      const mustClauses = [];
+
+      // Vector similarity search using knn
+      const knnQuery = {
+        field: "embedding",
+        query_vector: queryEmbedding,
+        k: options.limit || 20,
+        num_candidates: (options.limit || 20) * 10, // Search more candidates for better results
+      };
+
+      // Add filters if provided
+      if (options.filter) {
+        if (options.filter.department) {
+          mustClauses.push({
+            term: { department: options.filter.department },
+          });
+        }
+        if (options.filter.employee_id) {
+          mustClauses.push({
+            term: { employee_id: options.filter.employee_id },
+          });
+        }
+      }
+
+      // Build the search request
+      const searchBody = {
+        knn: knnQuery,
+        size: options.limit || 20,
+      };
+
+      // Add filters if any
+      if (mustClauses.length > 0) {
+        searchBody.query = {
+          bool: {
+            must: mustClauses,
+          },
+        };
+      }
+
+      // Perform vector search in Elasticsearch
+      const response = await elasticClient.search({
+        index: this.elasticIndexName,
+        body: searchBody,
       });
 
-      if (textResults.hits.length === 0) {
-        return { hits: [], totalHits: 0, query, searchType: "semantic" };
-      }
-
-      console.log(`📄 Found ${textResults.hits.length} text matches`);
-
-      // 3. جلب embeddings المحفوظة وحساب التشابه
-      const resultsWithSimilarity = [];
-
-      for (const hit of textResults.hits) {
-        // جلب الـ embedding من قاعدة البيانات
-        const docEmbedding = await this.getEmbedding(hit.id);
-
-        if (!docEmbedding) {
-          console.log(`⚠️  No embedding for document ${hit.id}, generating...`);
-
-          // إذا لم يكن موجود، ولّده الآن
-          const docText = `${hit.title} ${hit.description} ${
-            hit.extracted_text || ""
-          }`.substring(0, 5000);
-
-          if (docText.trim().length > 0) {
-            const newEmbedding = await this.generateEmbedding(docText);
-            await this.saveEmbedding(hit.id, newEmbedding);
-            const similarity = this.cosineSimilarity(
-              queryEmbedding,
-              newEmbedding
-            );
-
-            resultsWithSimilarity.push({
-              ...hit,
-              semanticScore: similarity,
-            });
-          }
-          continue;
-        }
-
-        // حساب التشابه باستخدام الـ embedding المحفوظ
-        const similarity = this.cosineSimilarity(queryEmbedding, docEmbedding);
-
-        resultsWithSimilarity.push({
-          ...hit,
-          semanticScore: similarity,
-        });
-      }
-
-      // 4. ترتيب حسب التشابه
-      resultsWithSimilarity.sort((a, b) => b.semanticScore - a.semanticScore);
-
-      const finalResults = resultsWithSimilarity.slice(0, options.limit || 20);
+      // Format results
+      const hits = response.hits.hits.map((hit) => {
+        const source = hit._source;
+        return {
+          id: source.document_id,
+          title: source.title,
+          description: source.description,
+          file_name: source.file_name,
+          department: source.department,
+          employee_id: source.employee_id,
+          semanticScore: hit._score, // Elasticsearch similarity score
+        };
+      });
 
       console.log(
-        `✅ Returned ${finalResults.length} semantic results (avg score: ${(
-          finalResults.reduce((sum, r) => sum + r.semanticScore, 0) /
-          finalResults.length
+        `✅ Returned ${
+          hits.length
+        } semantic results from Elasticsearch (avg score: ${(
+          hits.reduce((sum, r) => sum + r.semanticScore, 0) / hits.length || 0
         ).toFixed(3)})`
       );
 
       return {
-        hits: finalResults,
-        totalHits: textResults.totalHits,
+        hits: hits,
+        totalHits: response.hits.total.value,
         query,
         searchType: "semantic",
       };
@@ -591,9 +684,7 @@ class Document {
   }
 }
 
-// إنشاء instance واحد
 const documentInstance = new Document();
 
-// تصدير
 export default Document;
 export { documentInstance };
