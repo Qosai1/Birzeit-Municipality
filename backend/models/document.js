@@ -603,8 +603,29 @@ class Document {
       // Generate embedding for the query
       const queryEmbedding = await this.generateEmbedding(query);
 
-      // Build Elasticsearch query with vector search
-      const mustClauses = [];
+      // Build filter clauses for KNN query
+      const filterClauses = [];
+
+      // Add filters if provided
+      if (options.filter) {
+        if (options.filter.department) {
+          // Support both single department and array of departments
+          if (Array.isArray(options.filter.department)) {
+            filterClauses.push({
+              terms: { department: options.filter.department },
+            });
+          } else {
+            filterClauses.push({
+              term: { department: options.filter.department },
+            });
+          }
+        }
+        if (options.filter.employee_id) {
+          filterClauses.push({
+            term: { employee_id: options.filter.employee_id },
+          });
+        }
+      }
 
       // Vector similarity search using knn
       const knnQuery = {
@@ -614,24 +635,16 @@ class Document {
         num_candidates: (options.limit || 20) * 10, // Search more candidates for better results
       };
 
-      // Add filters if provided
-      if (options.filter) {
-        if (options.filter.department) {
-          // Support both single department and array of departments
-          if (Array.isArray(options.filter.department)) {
-            mustClauses.push({
-              terms: { department: options.filter.department },
-            });
-          } else {
-            mustClauses.push({
-              term: { department: options.filter.department },
-            });
-          }
-        }
-        if (options.filter.employee_id) {
-          mustClauses.push({
-            term: { employee_id: options.filter.employee_id },
-          });
+      // Add filters to KNN query if any (filters must be inside knn object in ES 8.x+)
+      if (filterClauses.length > 0) {
+        if (filterClauses.length === 1) {
+          knnQuery.filter = filterClauses[0];
+        } else {
+          knnQuery.filter = {
+            bool: {
+              must: filterClauses,
+            },
+          };
         }
       }
 
@@ -640,15 +653,6 @@ class Document {
         knn: knnQuery,
         size: options.limit || 20,
       };
-
-      // Add filters if any
-      if (mustClauses.length > 0) {
-        searchBody.query = {
-          bool: {
-            must: mustClauses,
-          },
-        };
-      }
 
       // Perform vector search in Elasticsearch
       const response = await elasticClient.search({
