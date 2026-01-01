@@ -617,9 +617,16 @@ class Document {
       // Add filters if provided
       if (options.filter) {
         if (options.filter.department) {
-          mustClauses.push({
-            term: { department: options.filter.department },
-          });
+          // Support both single department and array of departments
+          if (Array.isArray(options.filter.department)) {
+            mustClauses.push({
+              terms: { department: options.filter.department },
+            });
+          } else {
+            mustClauses.push({
+              term: { department: options.filter.department },
+            });
+          }
         }
         if (options.filter.employee_id) {
           mustClauses.push({
