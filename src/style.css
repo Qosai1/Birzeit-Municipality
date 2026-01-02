@@ -3,6 +3,7 @@
 }
 body {
   background-color: #f2f2f2;
+  
 }
 /* Login page */
 
@@ -27,6 +28,13 @@ body {
     background-position: 0% 50%;
   }
 }
+.login-error {
+  color: #e63946;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+}
+
 
 .login-box-animated {
   background: rgba(25, 25, 25, 0.85);
@@ -130,16 +138,17 @@ body {
 .details {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
   gap: 20px;
   padding: 20px;
+ padding-top: 80px; 
+
 }
 
 .details > div {
   flex: 1;
   text-align: center;
-  background-color: white;
+  background-color: #080808;
   border-radius: 16px;
   padding: 25px 15px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -152,13 +161,13 @@ body {
 }
 
 h3 {
-  color: #000;
+  color: #eee8e8;
   margin-bottom: 10px;
   font-size: 1.1rem;
 }
 
 h5 {
-  color: #333;
+  color: #eee8e8;
   font-size: 1.5rem;
   font-weight: bold;
   margin: 0;
@@ -169,17 +178,27 @@ h5 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #111111;
+  height: 80px;       
+
+  background-color: #080808;
   color: white;
-  padding: 15px 40px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  border-radius: 5px;
+  padding: 20px;      
+  margin: 0;         
+  width: 100%;       
+
+  position: fixed;  
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
+
 
 .logo h2 {
   margin: 0;
   font-size: 1.4rem;
   font-weight: 600;
+  color: white;
 }
 
 .nav-links {
@@ -219,60 +238,71 @@ h5 {
 }
 
 /* Quick Actions style */
-.actions {
+.dashboard-row {
   display: flex;
-  flex-direction: row;
-  gap: 10px;
+  gap: 20px;
+  padding: 20px;
+ 
 }
-.quick-actions {
+
+.auto-height {
+  flex: 1;
+}
+
+.stretch-height {
+  flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+
+.card {
+  background: #020202;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.quick-actions {
+  padding-top: 80px;
+  display: flex;
+  flex: 1;
+  gap: 30px;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 20px 0;
+}
+
+.action-group {
+  padding-top: 80px;
+  background: #020202;
+  padding: 20px;
+  border-radius: 12px;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.group-title {
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #d1cccc;
 }
 
 .action-link {
   display: flex;
-
   align-items: center;
-  gap: 5px;
-  padding: 10px 15px;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px;
   border-radius: 8px;
-  color: white;
-  font-weight: 500;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  background: #ffffff;
+  color: #333;
+  transition: 0.2s ease;
 }
 
 .action-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.action-link.add {
-  background-color: #28a745;
-}
-
-.action-link.employees {
-  background-color: #17a2b8;
-}
-
-.action-link.schedule {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.action-link.interviews {
-  background-color: #fd7e14;
-}
-.action-link.InterviewCalendar{
-  background-color: #0d6efd;
-  color: #000;
-}
-
-.action-link.Documents {
-  background-color: #6f42c1;
+  background: #eef2ff;
+  transform: translateX(4px);
 }
 
 
@@ -351,7 +381,7 @@ h5 {
 }
 
 .profile-card {
-  background-color: #fff;
+  background-color: #0c0c0c;
   border-radius: 16px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   padding: 40px 50px;
@@ -366,11 +396,11 @@ h5 {
 
 .profile-icon {
   font-size: 80px;
-  color: #8d99bb;
+  color: #f4f5f7;
 }
 
 .profile-header h2 {
-  color: #22315c;
+  color: #f6f8fc;
   margin: 10px 0 5px;
 }
 
@@ -391,7 +421,7 @@ h5 {
   align-items: center;
   gap: 12px;
   font-size: 1rem;
-  color: #333;
+  color: #fcfafa;
 }
 
 .info-icon {
@@ -578,12 +608,15 @@ h5 {
   flex: 1;
   display: flex;
   flex-direction: column;
+   margin-bottom: 20px;
+  text-align: left;
+  color:white;
 }
 
 label {
   font-weight: 600;
   margin-bottom: 5px;
-  color: #333;
+  color: #0a0a0a;
 }
 
 input,
@@ -919,17 +952,23 @@ input:focus {
 }
 
 /* chart style */
+
+.center-Hr {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-top: 30px;
+}
 .chart-container {
-  flex: 1;
-  background: #fff;
-  width: 50%;
+  background: #f8f6f6;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
 .chart-container h2 {
-  color: #004aad;
+  color: rgb(8, 8, 8);
 
   margin-bottom: 20px;
 }
@@ -994,7 +1033,7 @@ input:focus {
 
 .upload-btn {
   display: inline-block;
-  background-color: #007bff;
+  background-color: #0a0a0a;
   color: white;
   padding: 12px 20px;
   border-radius: 8px;
@@ -1071,13 +1110,9 @@ input:focus {
 
 .file-upload-container h2 {
   font-size: 24px;
-  color: #333;
+  color: #0c0c0c;
 }
 
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
 
 .upload-option {
   display: flex;
@@ -1094,7 +1129,7 @@ input:focus {
 .upload-option-label {
   font-size: 16px;
   padding: 10px 20px;
-  border: 2px solid #007bff;
+  border: 2px solid #b0b6bd;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1132,7 +1167,7 @@ input:focus {
 }
 
 button.upload-btn {
-  background-color: #007bff;
+  background-color: #050505;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -1332,7 +1367,7 @@ button:disabled {
 
 
 .file-upload-container {
-  background-color: white;
+  background-color: rgb(248, 247, 247);
   border-radius: 10px;
   padding: 30px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -1342,13 +1377,10 @@ button:disabled {
 
 h2 {
   font-size: 24px;
-  color: #333;
+  color: #f3f0f0;
 }
 
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
+
 
 .upload-option {
   display: flex;
@@ -1365,21 +1397,21 @@ h2 {
 .upload-option-label {
   font-size: 16px;
   padding: 10px 20px;
-  border: 2px solid #007bff;
+  border: 2px solid #0d0d0e;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .upload-option-label.active {
-  background-color: #007bff;
-  color: white;
+  background-color: #adb3b9;
+  color: rgb(8, 8, 8);
 }
 
 .upload-icon {
   display: block;
   font-size: 40px;
-  color: #007bff;
+  color: #0c0c0c;
   margin-bottom: 20px;
   cursor: pointer;
 }
@@ -1403,10 +1435,10 @@ input[type="file"] {
 }
 
 button.upload-btn {
-  background-color: #007bff;
+  background-color: #0d0d0e;
   color: white;
   padding: 10px 20px;
-  border: none;
+  border: 1px solid white;
   border-radius: 30px;
   cursor: pointer;
   font-size: 16px;
@@ -1414,7 +1446,7 @@ button.upload-btn {
 }
 
 button.upload-btn:hover {
-  background-color: #0056b3;
+  background-color: #6a6c6e;
 }
 
 .notification {
@@ -1460,7 +1492,7 @@ button.upload-btn:hover {
   max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
-  background: #ffffff;
+  background: #020202;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
@@ -1470,7 +1502,7 @@ button.upload-btn:hover {
   margin-bottom: 25px;
   font-size: 28px;
   font-weight: 600;
-  color: #333;
+  color: white;
 }
 
 .documents-table {
@@ -1480,8 +1512,8 @@ button.upload-btn:hover {
 }
 
 .documents-table th {
-  background-color: #f4f4f4;
-  color: #222;
+  background-color: #020202;
+  color: white;
   padding: 12px;
   border-bottom: 2px solid #ddd;
   text-align: left;
@@ -1491,11 +1523,11 @@ button.upload-btn:hover {
 .documents-table td {
   padding: 12px;
   border-bottom: 1px solid #eee;
-  color: #333;
+  color: white;
 }
 
 .documents-table tr:hover {
-  background-color: #fafafa;
+  background-color: #313030;
   transition: 0.2s ease;
 }
 
@@ -1504,6 +1536,15 @@ button.upload-btn:hover {
   gap: 10px;
 }
 
+.delete-btn-document{
+  background-color: #e48281;
+   padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 6px;
+  color: white;
+}
 .view-btn,
 .download-btn {
   padding: 6px 12px;
@@ -1514,7 +1555,7 @@ button.upload-btn:hover {
 }
 
 .view-btn {
-  background-color: #4caf50;
+  background-color: #1d201d;
   color: white;
 }
 

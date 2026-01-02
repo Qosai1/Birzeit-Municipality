@@ -24,7 +24,6 @@ export default function Header({ user, onLogout }) {
 
     calcUnread();
 
-    // ✅ يتحدّث لما localStorage يتغير
     window.addEventListener("storage", calcUnread);
     return () => window.removeEventListener("storage", calcUnread);
   }, []);

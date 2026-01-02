@@ -25,9 +25,18 @@ export default function HrDashboard({ user }) {
                 <Details user={user} />
                 <QuickActions />
               
-                <EmployeesChart />
-             
-                
+                 <div className="dashboard-row">
+                 <div className="card auto-height">
+                        <FileUploadPage />
+                  </div>
+
+                 <div className="card stretch-height">
+                        <EmployeesChart />
+                    </div>
+                   </div>
+
+                 <DocumentsList />
+                  
               </div>
             }
           />

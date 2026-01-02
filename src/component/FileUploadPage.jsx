@@ -46,7 +46,7 @@ const FileUploadPage = () => {
     const formData = new FormData();
     formData.append("file", selectedFiles);
     formData.append("title", fileDescription);
-    formData.append("descriptionSS", fileContentDescription);
+    formData.append("description", fileContentDescription);
     formData.append("employee_name", user.fullName);
     formData.append("employee_id", user.id);
     formData.append("department", user.department);
@@ -156,9 +156,6 @@ const FileUploadPage = () => {
         />
       )}
      
-    </div>
-    <div>
-      <DocumentsList />
     </div>
     </>
   );

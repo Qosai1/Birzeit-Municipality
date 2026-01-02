@@ -20,7 +20,7 @@ class Document {
     this.maxFileSize = 50 * 1024 * 1024; // 50MB
   }
 
-  // ========== MeiliSearch Initialization ==========
+  //  MeiliSearch Initialization 
   async initializeMeiliSearch() {
     try {
       try {
@@ -53,7 +53,7 @@ class Document {
     }
   }
 
-  // ========== Database Operations ==========
+  //  Database Operations 
   static async getAll() {
     try {
       const [rows] = await db.query(
@@ -142,7 +142,7 @@ class Document {
     }
   }
 
-  // ========== File Text Extraction ==========
+  //  File Text Extraction 
 
   // PDF extraction
   static async extractPDF(filePath) {
@@ -241,7 +241,7 @@ class Document {
     return "Unsupported file type";
   }
 
-  // ========== MeiliSearch Operations ==========
+  //  MeiliSearch Operations 
   async addToMeiliSearch(document, extractedText) {
     try {
       const index = this.meiliClient.index(this.indexName);
@@ -332,7 +332,7 @@ class Document {
     }
   }
 
-  // ========== Search Operations ==========
+  //  Search Operations 
   async search(query, options = {}) {
     try {
       const index = this.meiliClient.index(this.indexName);
@@ -357,7 +357,7 @@ class Document {
     }
   }
 
-  // ========== AI Model & Embeddings ==========
+  //  AI Model & Embeddings 
   async initializeEmbedder() {
     if (!this.embedder) {
       console.log("⏳ Loading AI model...");
@@ -410,7 +410,6 @@ class Document {
     return denominator === 0 ? 0 : dotProduct / denominator;
   }
 
-  // ========== حفظ Embedding في قاعدة البيانات ==========
   async saveEmbedding(documentId, embedding) {
     try {
       const embeddingJSON = JSON.stringify(embedding);
@@ -430,7 +429,6 @@ class Document {
     }
   }
 
-  // ========== جلب Embedding من قاعدة البيانات ==========
   async getEmbedding(documentId) {
     try {
       const [rows] = await db.query(
@@ -447,7 +445,6 @@ class Document {
     }
   }
 
-  // ========== توليد Embeddings لكل الوثائق (يُنفذ مرة واحدة) ==========
   async generateAllEmbeddings() {
     try {
       console.log("⏳ Generating embeddings for all documents...");
@@ -456,14 +453,12 @@ class Document {
       let processed = 0;
 
       for (const doc of documents) {
-        // تحقق إذا كان الـ embedding موجود
         const existingEmbedding = await this.getEmbedding(doc.id);
         if (existingEmbedding) {
           console.log(`⏭️  Document ${doc.id} already has embedding`);
           continue;
         }
 
-        // استخراج النص
         let extractedText = "";
         if (doc.file_path && fs.existsSync(doc.file_path)) {
           try {
@@ -477,19 +472,16 @@ class Document {
           }
         }
 
-        // توليد النص الكامل
         const fullText =
           `${doc.title} ${doc.description} ${extractedText}`.substring(0, 5000);
 
         if (fullText.trim().length === 0) {
-          console.log(`⏭️  Document ${doc.id} has no text`);
+          console.log(`⏭  Document ${doc.id} has no text`);
           continue;
         }
 
-        // توليد embedding
         const embedding = await this.generateEmbedding(fullText);
 
-        // حفظه في قاعدة البيانات
         await this.saveEmbedding(doc.id, embedding);
 
         processed++;
@@ -498,7 +490,7 @@ class Document {
         );
       }
 
-      console.log(`✅ Generated embeddings for ${processed} documents`);
+      console.log(` Generated embeddings for ${processed} documents`);
       return processed;
     } catch (err) {
       console.error("✗ Error generating embeddings:", err.message);
@@ -506,15 +498,12 @@ class Document {
     }
   }
 
-  // ========== البحث الدلالي المحسّن ==========
   async semanticSearch(query, options = {}) {
     try {
-      console.log(`🔍 Semantic search for: "${query}"`);
+      console.log(` Semantic search for: "${query}"`);
 
-      // 1. توليد embedding للسؤال
       const queryEmbedding = await this.generateEmbedding(query);
 
-      // 2. البحث النصي الأولي (للتصفية)
       const textResults = await this.search(query, {
         limit: options.limit || 50,
         filter: options.filter,
@@ -524,19 +513,16 @@ class Document {
         return { hits: [], totalHits: 0, query, searchType: "semantic" };
       }
 
-      console.log(`📄 Found ${textResults.hits.length} text matches`);
+      console.log(` Found ${textResults.hits.length} text matches`);
 
-      // 3. جلب embeddings المحفوظة وحساب التشابه
       const resultsWithSimilarity = [];
 
       for (const hit of textResults.hits) {
-        // جلب الـ embedding من قاعدة البيانات
         const docEmbedding = await this.getEmbedding(hit.id);
 
         if (!docEmbedding) {
-          console.log(`⚠️  No embedding for document ${hit.id}, generating...`);
+          console.log(`  No embedding for document ${hit.id}, generating...`);
 
-          // إذا لم يكن موجود، ولّده الآن
           const docText = `${hit.title} ${hit.description} ${
             hit.extracted_text || ""
           }`.substring(0, 5000);
@@ -557,7 +543,6 @@ class Document {
           continue;
         }
 
-        // حساب التشابه باستخدام الـ embedding المحفوظ
         const similarity = this.cosineSimilarity(queryEmbedding, docEmbedding);
 
         resultsWithSimilarity.push({
@@ -566,13 +551,12 @@ class Document {
         });
       }
 
-      // 4. ترتيب حسب التشابه
       resultsWithSimilarity.sort((a, b) => b.semanticScore - a.semanticScore);
 
       const finalResults = resultsWithSimilarity.slice(0, options.limit || 20);
 
       console.log(
-        `✅ Returned ${finalResults.length} semantic results (avg score: ${(
+        ` Returned ${finalResults.length} semantic results (avg score: ${(
           finalResults.reduce((sum, r) => sum + r.semanticScore, 0) /
           finalResults.length
         ).toFixed(3)})`
@@ -591,9 +575,7 @@ class Document {
   }
 }
 
-// إنشاء instance واحد
 const documentInstance = new Document();
 
-// تصدير
 export default Document;
 export { documentInstance };

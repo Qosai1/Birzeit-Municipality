@@ -6,10 +6,12 @@ import "../style.css";
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); 
 
     try {
       const response = await fetch("http://localhost:5000/api/auth/login", {
@@ -29,11 +31,10 @@ export default function Login({ onLogin }) {
         else if (user.role === "admin") navigate("/admin-dashboard");
         else navigate("/");
       } else {
-        alert(data.message || "Invalid credentials");
+        setError(data.message || "Invalid username or password");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Server error. Try again later.");
+    } catch (err) {
+      setError("Server error. Please try again later.");
     }
   };
 
@@ -52,6 +53,7 @@ export default function Login({ onLogin }) {
             required
             className="login-input-animated"
           />
+
           <input
             type="password"
             placeholder="Password"
@@ -60,6 +62,10 @@ export default function Login({ onLogin }) {
             required
             className="login-input-animated"
           />
+
+          
+          {error && <p className="login-error">{error}</p>}
+
           <button type="submit" className="login-btn-animated">
             Sign In
           </button>

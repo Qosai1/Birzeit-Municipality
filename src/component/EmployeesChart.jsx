@@ -51,7 +51,7 @@ export default function EmployeesChart() {
             <YAxis allowDecimals={false} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="count" fill="#004aad" name="Employees Count" />
+            <Bar dataKey="count" fill="#070707ff" name="Employees Count" />
           </BarChart>
         </ResponsiveContainer>
       )}

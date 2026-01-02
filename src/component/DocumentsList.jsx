@@ -137,7 +137,7 @@ export default function DocumentsList() {
                   Download
                 </button>
                 <button
-                  className="delete-btn"
+                  className="delete-btn-document"
                   onClick={() => softDelete(doc.id)}
                 >
                   Delete

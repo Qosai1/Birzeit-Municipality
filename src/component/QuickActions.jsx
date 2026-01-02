@@ -7,8 +7,13 @@ import { SlCalender } from "react-icons/sl";
 import "../style.css";
 
 export default function QuickActions() {
-  return (
-    <div className="quick-actions">
+ return (
+  <div className="quick-actions">
+
+    {/* Employees Section */}
+    <div className="action-group">
+      <h3 className="group-title">Employees</h3>
+
       <Link to="/hr-dashboard/add" className="action-link add">
         <IoPersonAddSharp /> Add New Employee
       </Link>
@@ -16,6 +21,11 @@ export default function QuickActions() {
       <Link to="/hr-dashboard/employees" className="action-link employees">
         <HiMiniUsers /> View All Employees
       </Link>
+    </div>
+
+    {/* Interviews Section */}
+    <div className="action-group">
+      <h3 className="group-title">Interviews</h3>
 
       <Link to="/hr-dashboard/schedule" className="action-link schedule">
         <CgCalendarDates /> Schedule Interview
@@ -24,17 +34,12 @@ export default function QuickActions() {
       <Link to="/hr-dashboard/interviews" className="action-link interviews">
         <TbCalendarUser /> View Scheduled Interviews
       </Link>
-      <Link to="/hr-dashboard/calendar" className="action-link InterviewCalendar">
+
+      <Link to="/hr-dashboard/calendar" className="action-link calendar">
         <SlCalender /> Interview Calendar
       </Link>
-      <Link to="/hr-dashboard/Documents" className="action-link Documents">
-       <TbReportAnalytics /> Documents </Link>
-         
-
-      
-      
-
-      
     </div>
-  );
+
+  </div>
+);
 }
