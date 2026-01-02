@@ -1,4 +1,4 @@
-import { Routes, Route, Link, Outlet } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import FileUploadPage from "./FileUploadPage";
 import EmployeesChart from "../component/EmployeesChart";
 import EmployeesTable from "../component/EmployeesTable";
