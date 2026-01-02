@@ -9,6 +9,7 @@ import multer from "multer";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { documentInstance } from "./models/document.js";
 
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
@@ -26,8 +27,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 /*  FILE UPLOAD  */
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) =>
-    cb(null, path.join(__dirname, "uploads")),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, "uploads")),
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname)),
 });
@@ -136,8 +136,7 @@ app.post("/api/conversations/start", async (req, res) => {
     [user1, user2]
   );
 
-  if (existing.length)
-    return res.json({ conversationId: existing[0].id });
+  if (existing.length) return res.json({ conversationId: existing[0].id });
 
   const [conv] = await db.query(`INSERT INTO conversations () VALUES ()`);
   const cid = conv.insertId;
@@ -159,7 +158,7 @@ app.get("/api/conversations/user/:id", async (req, res) => {
 
   const [rows] = await db.query(
     `
-    SELECT 
+    SELECT
       c.id AS conversationId,
       e.fullName AS otherUser,
       e.role AS otherRole
@@ -225,7 +224,6 @@ app.post(
 
     io.to(`conversation_${convId}`).emit("new_message", message);
 
-
     res.json({ sent: true });
   }
 );
@@ -237,9 +235,30 @@ app.use("/api/interviews", interviewRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/auth", authRoutes);
 
+/*  INITIALIZATION  */
+
+// Initialize Elasticsearch and MeiliSearch on startup
+(async () => {
+  try {
+    // Initialize MeiliSearch (text search) - required
+    await documentInstance.initializeMeiliSearch();
+
+    // Initialize Elasticsearch (semantic search) - optional
+    await documentInstance.initializeElasticsearch();
+
+    console.log("✓ Search services initialized");
+    console.log("  → Text search (MeiliSearch): Available");
+    if (documentInstance.elasticInitialized) {
+      console.log("  → Semantic search (Elasticsearch): Available");
+    } else {
+      console.log("  → Semantic search (Elasticsearch): Not available");
+    }
+  } catch (err) {
+    console.error("⚠️  Initialization warning:", err.message);
+  }
+})();
+
 /*  START  */
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

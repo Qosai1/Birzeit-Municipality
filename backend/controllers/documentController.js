@@ -143,22 +143,22 @@ export const uploadFile = async (req, res) => {
   };
 
   try {
-    // 1. استخراج النص
+    // 1. Extract text from file
     const extractedText = await Document.extractFile(
       filePath,
       file.originalname
     );
 
-    // 2. حفظ في DB
+    // 2. Save document to database
     const newDocId = await Document.create(documentData);
 
-    // 3. جلب الوثيقة
+    // 3. Retrieve the created document
     const doc = await Document.getById(newDocId);
 
-    // 4. إضافة لـ MeiliSearch
+    // 4. Add document to MeiliSearch for text search
     await documentInstance.addToMeiliSearch(doc, extractedText);
 
-    // 5. توليد Embedding (في الخلفية)
+    // 5. Generate embedding asynchronously (in background)
     setTimeout(async () => {
       try {
         const fullText = `${title} ${
@@ -166,8 +166,18 @@ export const uploadFile = async (req, res) => {
         } ${extractedText}`.substring(0, 5000);
         if (fullText.trim().length > 0) {
           const embedding = await documentInstance.generateEmbedding(fullText);
-          await documentInstance.saveEmbedding(newDocId, embedding);
-          console.log(`✓ Embedding generated for document ${newDocId}`);
+          // Pass document metadata for Elasticsearch
+          await documentInstance.saveEmbedding(newDocId, embedding, {
+            title: title,
+            description: description,
+            file_name: file.originalname,
+            department: department,
+            employee_id: employee_id,
+            created_at: doc.created_at,
+          });
+          console.log(
+            `✓ Embedding generated and saved to Elasticsearch for document ${newDocId}`
+          );
           console.log("Embedding preview:", embedding.slice(0, 5));
         }
       } catch (err) {
@@ -198,7 +208,7 @@ export const uploadFile = async (req, res) => {
   }
 };
 
-// ========== البحث النصي ==========
+// ========== Text Search ==========
 export const searchDocuments = async (req, res) => {
   try {
     const { query, limit, offset, filter } = req.query;
@@ -233,7 +243,7 @@ export const searchDocuments = async (req, res) => {
   }
 };
 
-// ========== البحث الدلالي ==========
+// ========== Semantic Search ==========
 export const semanticSearchDocuments = async (req, res) => {
   try {
     const { query, limit, filter } = req.query;
@@ -247,9 +257,23 @@ export const semanticSearchDocuments = async (req, res) => {
 
     console.log(`🧠 Semantic search: "${query}"`);
 
+    // Parse filter if provided (expects JSON string)
+    let parsedFilter = null;
+    if (filter) {
+      try {
+        parsedFilter = typeof filter === "string" ? JSON.parse(filter) : filter;
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid filter format. Expected JSON string.",
+          error: err.message,
+        });
+      }
+    }
+
     const results = await documentInstance.semanticSearch(query, {
       limit: parseInt(limit) || 20,
-      filter: filter || null,
+      filter: parsedFilter,
     });
 
     res.status(200).json({
@@ -268,7 +292,53 @@ export const semanticSearchDocuments = async (req, res) => {
   }
 };
 
-// ========== توليد Embeddings لكل الوثائق ==========
+// ========== Semantic Search by Department ==========
+export const semanticSearchByDepartment = async (req, res) => {
+  try {
+    const { query, limit } = req.query;
+    const { department } = req.params;
+
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    if (!department || department.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Department is required",
+      });
+    }
+
+    console.log(
+      `🧠 Semantic search by department: "${query}" in "${department}"`
+    );
+
+    const results = await documentInstance.semanticSearch(query, {
+      limit: parseInt(limit) || 20,
+      filter: { department: department },
+    });
+
+    res.status(200).json({
+      success: true,
+      search_type: "semantic",
+      query: query,
+      department: department,
+      results: results.hits,
+      total_hits: results.totalHits,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error performing semantic search by department",
+      error: err.message,
+    });
+  }
+};
+
+// ========== Generate Embeddings for All Documents ==========
 export const generateAllEmbeddings = async (req, res) => {
   try {
     console.log("⏳ Generating embeddings...");

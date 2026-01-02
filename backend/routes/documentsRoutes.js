@@ -10,6 +10,7 @@ import {
   uploadFile,
   searchDocuments,
   semanticSearchDocuments,
+  semanticSearchByDepartment,
   generateAllEmbeddings,
 } from "../controllers/documentController.js";
 
@@ -39,6 +40,7 @@ router.post("/upload", upload.single("file"), uploadFile); // File upload and te
 // ========== Search Routes 🔍 ==========
 router.get("/search/text", searchDocuments);
 router.get("/search/semantic", semanticSearchDocuments);
+router.get("/search/semantic/department/:department", semanticSearchByDepartment);
 
 // ========== Admin Routes 🔧 ==========
 router.get("/admin/generate-embeddings", generateAllEmbeddings);
