@@ -5,18 +5,24 @@ import Messages from "./Messages.jsx";
 import DocumentsList from "./DocumentsList.jsx";
 import "../style.css";
 
-export default function EmployeeDashboard({ user }) {
+export default function EmployeeDashboard({user}) {
   return (
     <div className="employee-dashboard">
-
+   <Routes>
 
        
-            <div>
-              <FileUploadPage />
-              <DocumentsList />
-            </div>
-          
-         <Routes>
+            <Route
+            index
+            element={
+              <div>
+      
+                  <FileUploadPage />
+                 <DocumentsList />
+                  
+              </div>
+            }
+          />
+      
           <Route path="messages" element={<Messages user={user} />} />
         <Route path="profile" element={<Profile user={user} />} />
       </Routes>

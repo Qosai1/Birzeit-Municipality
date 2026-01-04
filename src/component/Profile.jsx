@@ -1,6 +1,6 @@
 import "../style.css";
-import React, { useEffect,useState } from "react";
-import { FaUserCircle, FaEnvelope, FaPhoneAlt, FaIdCard, FaMapMarkerAlt, FaBuilding, FaCalendarAlt, FaMoneyBill } from "react-icons/fa";
+import React, { useState } from "react";
+import { FaUserCircle, FaEnvelope, FaPhoneAlt, FaIdCard, FaMapMarkerAlt, FaBuilding, FaCalendarAlt } from "react-icons/fa";
 
 export default function Profile() {
   const [user,setUser] = useState(()=>{
@@ -11,8 +11,6 @@ export default function Profile() {
     }
   });
   
-
-
   return (
     <div className="profile-container">
       <div className="profile-card">

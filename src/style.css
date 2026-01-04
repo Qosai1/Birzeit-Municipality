@@ -1545,6 +1545,9 @@ button.upload-btn:hover {
   border-radius: 6px;
   color: white;
 }
+.delete-btn-document:hover{
+  background-color: #c0392b;
+}
 .view-btn,
 .download-btn {
   padding: 6px 12px;

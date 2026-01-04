@@ -10,7 +10,7 @@ import DocumentsList from "./DocumentsList";
 import { HiMiniUsers } from "react-icons/hi2";
 import { TbCalendarUser } from "react-icons/tb";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ user }) {
   return (
     <div>
       
@@ -53,8 +53,8 @@ export default function AdminDashboard() {
           {/* ROUTES */}
           <Route path="employees" element={<EmployeesTable />} />
           <Route path="interviews" element={<InterviewsTable />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="messages" element={<Messages />} />
+          <Route path="profile" element={<Profile user={user}/>} />
+          <Route path="messages" element={<Messages user={user}/>} />
         </Routes>
       </div>
     </div>
