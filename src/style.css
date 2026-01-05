@@ -338,7 +338,7 @@ h5 {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  background-color: #ffffff;
+  background-color: #0a0a0a;
   border-radius: 16px;
   padding: 30px 40px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -350,7 +350,7 @@ h5 {
   display: flex;
   flex-direction: column;
   font-weight: 600;
-  color: #333;
+  color: #fcf9f9;
 }
 
 .add-employee-form input {
@@ -451,7 +451,7 @@ h5 {
 }
 
 .employees-table thead {
-  background: #004aad;
+  background: #111111;
   color: #fff;
 }
 
@@ -504,6 +504,14 @@ h5 {
   box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
 }
 
+.actions{
+  display: flex;
+  flex: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+}
 .edit-btn {
   background-color: #ffb300;
 }
@@ -527,13 +535,14 @@ h5 {
   align-items: center;
   gap: 10px;
   margin: 50px;
+  padding-top: 20px;
 }
 
 .search-input {
   padding: 10px 15px;
   width: 350px;
   border-radius: 8px;
-  border: 2px solid #004aad;
+  border: 2px solid #070707;
   font-size: 0.95rem;
   outline: none;
   transition: all 0.3s ease;
@@ -574,7 +583,7 @@ h5 {
 .interview-container {
   max-width: 900px;
   margin: 40px auto;
-  background: #fff;
+  background: #000000;
   border-radius: 12px;
   padding: 30px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -583,7 +592,7 @@ h5 {
 
 .interview-container h2 {
   text-align: center;
-  color: #070707;
+  color: #ffffff;
 }
 
 .subtitle {
@@ -596,6 +605,7 @@ h5 {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  
 }
 
 .form-row {
@@ -610,13 +620,13 @@ h5 {
   flex-direction: column;
    margin-bottom: 20px;
   text-align: left;
-  color:white;
+  color:rgb(0, 0, 0);
 }
 
 label {
   font-weight: 600;
   margin-bottom: 5px;
-  color: #0a0a0a;
+  color: #ffffff;
 }
 
 input,
@@ -645,21 +655,28 @@ textarea:focus {
 }
 
 .schedule-btn {
-  background-color: #0ed873;
-  color: #fff;
+  background-color: #f5f8f7;
+  color: #000000;
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+
   cursor: pointer;
+  font-weight: 600;
+  height: 35px;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  
 }
 
 .schedule-btn:hover {
-  background-color: #149655;
+  background-color: #acbbb3;
 }
 input:focus {
   border-color: #2563eb;
 }
 .table-title {
+  padding-top: 60px;
   margin-top: 30px;
   text-align: center;
   color: #070707;
@@ -681,16 +698,18 @@ input:focus {
 }
 
 .interview-table th {
-  background-color: #2cce5d;
-  color: white;
+  background-color: #000000;
+  color: rgb(255, 255, 255);
+  border-radius: 8px;
 }
 
 .interview-table tr:nth-child(even) {
   background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
 .delete-btn {
-  background-color: #e74c3c;
+  background-color: #2e2c2c;
   color: white;
   border: none;
   padding: 6px 10px;
@@ -699,7 +718,7 @@ input:focus {
 }
 
 .delete-btn:hover {
-  background-color: #c0392b;
+  background-color: #5e5958;
 }
 
 .no-data {
@@ -710,9 +729,9 @@ input:focus {
 }
 .view-table-link {
   display: flex;
-  background-color: #0ed873;
+  background-color: #ffffff;
   margin: 10px 0 20px;
-  color: white;
+  color: rgb(0, 0, 0);
   font-weight: 600;
   text-decoration: none;
   height: 35px;
@@ -722,7 +741,7 @@ input:focus {
 }
 
 .view-table-link:hover {
-  background-color: #149655;
+  background-color: #a6b6ae;
 }
 .interviewer-input-container {
   display: flex;
@@ -924,8 +943,8 @@ input:focus {
 }
 
 .save-btn {
-  background-color: #004aad;
-  color: white;
+  background-color: #f8f5f5;
+  color: rgb(2, 2, 2);
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
@@ -934,7 +953,7 @@ input:focus {
 }
 
 .save-btn:hover {
-  background-color: #00327a;
+  background-color: #87878b;
 }
 
 .cancel-btn {

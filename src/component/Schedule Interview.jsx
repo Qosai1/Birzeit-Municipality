@@ -135,11 +135,12 @@ export default function ScheduleInterview() {
       <h2 className="page-title">HR Interview Scheduling System</h2>
 
       <form className="interview-form" onSubmit={handleSubmit}>
-        {/* Candidate Name & Email */}
+
         <div className="form-row">
           <div className="form-group">
             <label>Candidate Full Name</label>
             <input
+            placeholder="Full Name"
               type="text"
               name="employeeName"
               value={formData.employeeName}
@@ -170,6 +171,7 @@ export default function ScheduleInterview() {
               value={formData.department}
               onChange={handleChange}
               required
+              placeholder="e.g. Software Engineer / HR"
             />
           </div>
           <div className="form-group">

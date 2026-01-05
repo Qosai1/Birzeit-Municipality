@@ -107,7 +107,7 @@ export default function InterviewCalendar() {
             </p>
 
             <button className="close-btn" onClick={closeModal}>
-              Close
+             x
             </button>
           </div>
         </div>
