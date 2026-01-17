@@ -8,7 +8,6 @@ import {
   getAllDocumentsByDepartment,
   softDeleteDocument,
   uploadFile,
-  searchDocuments,
   semanticSearchDocuments,
   semanticSearchByDepartment,
   generateAllEmbeddings,
@@ -38,7 +37,6 @@ router.put("/:id/soft-delete", softDeleteDocument);
 router.post("/upload", upload.single("file"), uploadFile); // File upload and text extraction
 
 // ========== Search Routes 🔍 ==========
-router.get("/search/text", searchDocuments);
 router.get("/search/semantic", semanticSearchDocuments);
 router.get("/search/semantic/department/:department", semanticSearchByDepartment);
 

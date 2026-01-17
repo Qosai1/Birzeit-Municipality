@@ -1,10 +1,8 @@
-import Document, { documentInstance } from "../models/document.js";
+import Document from "../models/document.js";
+import FileExtractorService from "../services/FileExtractorService.js";
+import { embeddingService } from "../services/EmbeddingService.js";
+import { elasticsearchService } from "../services/ElasticsearchService.js";
 import fs from "fs";
-import { createRequire } from "module";
-
-// Fix for pdf-parse CommonJS import
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
 
 // get all documents
 export const getAllDocuments = async (req, res) => {
@@ -118,7 +116,7 @@ export const softDeleteDocument = async (req, res) => {
   }
 };
 
-// ========== Upload File + MeiliSearch + Embeddings ==========
+// ========== Upload File + Embeddings ==========
 export const uploadFile = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -144,7 +142,7 @@ export const uploadFile = async (req, res) => {
 
   try {
     // 1. Extract text from file
-    const extractedText = await Document.extractFile(
+    const extractedText = await FileExtractorService.extractFile(
       filePath,
       file.originalname
     );
@@ -155,30 +153,28 @@ export const uploadFile = async (req, res) => {
     // 3. Retrieve the created document
     const doc = await Document.getById(newDocId);
 
-    // 4. Add document to MeiliSearch for text search
-    await documentInstance.addToMeiliSearch(doc, extractedText);
-
-    // 5. Generate embedding asynchronously (in background)
+    // 4. Generate embedding asynchronously (in background)
     setTimeout(async () => {
       try {
         const fullText = `${title} ${
           description || ""
         } ${extractedText}`.substring(0, 5000);
         if (fullText.trim().length > 0) {
-          const embedding = await documentInstance.generateEmbedding(fullText);
-          // Pass document metadata for Elasticsearch
-          await documentInstance.saveEmbedding(newDocId, embedding, {
-            title: title,
-            description: description,
-            file_name: file.originalname,
-            department: department,
-            employee_id: employee_id,
-            created_at: doc.created_at,
-          });
+          await embeddingService.generateAndSaveEmbedding(
+            newDocId,
+            fullText,
+            {
+              title: title,
+              description: description,
+              file_name: file.originalname,
+              department: department,
+              employee_id: employee_id,
+              created_at: doc.created_at,
+            }
+          );
           console.log(
             `✓ Embedding generated and saved to Elasticsearch for document ${newDocId}`
           );
-          console.log("Embedding preview:", embedding.slice(0, 5));
         }
       } catch (err) {
         console.error(`⚠️  Embedding failed for doc ${newDocId}:`, err.message);
@@ -208,39 +204,13 @@ export const uploadFile = async (req, res) => {
   }
 };
 
-// ========== Text Search ==========
+// ========== Text Search (Removed - MeiliSearch deleted) ==========
 export const searchDocuments = async (req, res) => {
-  try {
-    const { query, limit, offset, filter } = req.query;
-
-    if (!query || query.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Search query is required",
-      });
-    }
-
-    const results = await documentInstance.search(query, {
-      limit: parseInt(limit) || 20,
-      offset: parseInt(offset) || 0,
-      filter: filter || null,
-    });
-
-    res.status(200).json({
-      success: true,
-      search_type: "text",
-      query: query,
-      results: results.hits,
-      total_hits: results.totalHits,
-      processing_time_ms: results.processingTime,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Error searching documents",
-      error: err.message,
-    });
-  }
+  res.status(410).json({
+    success: false,
+    message: "Text search endpoint has been removed. Please use semantic search instead.",
+    alternative_endpoint: "/api/documents/search/semantic",
+  });
 };
 
 // ========== Semantic Search ==========
@@ -271,7 +241,11 @@ export const semanticSearchDocuments = async (req, res) => {
       }
     }
 
-    const results = await documentInstance.semanticSearch(query, {
+    // Generate embedding for the query
+    const queryEmbedding = await embeddingService.generateEmbedding(query);
+
+    // Perform semantic search
+    const results = await elasticsearchService.semanticSearch(queryEmbedding, {
       limit: parseInt(limit) || 20,
       filter: parsedFilter,
     });
@@ -316,7 +290,11 @@ export const semanticSearchByDepartment = async (req, res) => {
       `🧠 Semantic search by department: "${query}" in "${department}"`
     );
 
-    const results = await documentInstance.semanticSearch(query, {
+    // Generate embedding for the query
+    const queryEmbedding = await embeddingService.generateEmbedding(query);
+
+    // Perform semantic search
+    const results = await elasticsearchService.semanticSearch(queryEmbedding, {
       limit: parseInt(limit) || 20,
       filter: { department: department },
     });
@@ -342,7 +320,7 @@ export const semanticSearchByDepartment = async (req, res) => {
 export const generateAllEmbeddings = async (req, res) => {
   try {
     console.log("⏳ Generating embeddings...");
-    const count = await documentInstance.generateAllEmbeddings();
+    const count = await embeddingService.generateAllEmbeddings();
 
     res.status(200).json({
       success: true,

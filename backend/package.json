@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^8.15.0",
+    "@xenova/transformers": "^2.17.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -21,10 +22,9 @@
     "moment-timezone": "^0.6.0",
     "multer": "^2.0.2",
     "mysql2": "^3.15.2",
+    "pdf-image-extractor": "^2.0.8",
     "socket.io": "^4.8.1",
     "tesseract.js": "^6.0.1",
-    "xlsx": "^0.18.5",
-    "@xenova/transformers": "^2.17.2",
-    "meilisearch": "^0.54.0"
+    "xlsx": "^0.18.5"
   }
 }

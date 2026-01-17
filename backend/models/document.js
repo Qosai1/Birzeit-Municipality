@@ -53,7 +53,7 @@ class Document {
     }
   }
 
-  //  MeiliSearch Initialization 
+  //  MeiliSearch Initialization
   async initializeMeiliSearch() {
     try {
       try {
@@ -86,7 +86,7 @@ class Document {
     }
   }
 
-  //  Database Operations 
+  //  Database Operations
   static async getAll() {
     try {
       const [rows] = await db.query(
@@ -123,7 +123,6 @@ class Document {
       throw err;
     }
   }
-  
 
   static async create(documentData) {
     try {
@@ -137,10 +136,6 @@ class Document {
         department,
       } = documentData;
 
-      const fixedFileName = file_name
-  ? Buffer.from(file_name, "latin1").toString("utf8")
-  : file_name;
-
       const [empRows] = await db.query(
         "SELECT id FROM employees WHERE id = ?",
         [employee_id]
@@ -153,7 +148,7 @@ class Document {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
       const [result] = await db.query(sql, [
-        fixedFileName,
+        file_name,
         title,
         description,
         file_path,
@@ -180,7 +175,7 @@ class Document {
     }
   }
 
-  //  File Text Extraction 
+  //  File Text Extraction
 
   // PDF extraction
   static async extractPDF(filePath) {
@@ -279,7 +274,7 @@ class Document {
     return "Unsupported file type";
   }
 
-  //  MeiliSearch Operations 
+  //  MeiliSearch Operations
   async addToMeiliSearch(document, extractedText) {
     try {
       const index = this.meiliClient.index(this.indexName);
@@ -370,7 +365,7 @@ class Document {
     }
   }
 
-  //  Search Operations 
+  //  Search Operations
   async search(query, options = {}) {
     try {
       const index = this.meiliClient.index(this.indexName);
@@ -395,7 +390,7 @@ class Document {
     }
   }
 
-  //  AI Model & Embeddings 
+  //  AI Model & Embeddings
   async initializeEmbedder() {
     if (!this.embedder) {
       console.log("⏳ Loading AI model...");

@@ -9,7 +9,7 @@ import multer from "multer";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import { documentInstance } from "./models/document.js";
+import { elasticsearchService } from "./services/ElasticsearchService.js";
 
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
@@ -237,18 +237,14 @@ app.use("/api/auth", authRoutes);
 
 /*  INITIALIZATION  */
 
-// Initialize Elasticsearch and MeiliSearch on startup
+// Initialize Elasticsearch on startup
 (async () => {
   try {
-    // Initialize MeiliSearch (text search) - required
-    await documentInstance.initializeMeiliSearch();
-
     // Initialize Elasticsearch (semantic search) - optional
-    await documentInstance.initializeElasticsearch();
+    const elasticInitialized = await elasticsearchService.initialize();
 
     console.log("✓ Search services initialized");
-    console.log("  → Text search (MeiliSearch): Available");
-    if (documentInstance.elasticInitialized) {
+    if (elasticInitialized) {
       console.log("  → Semantic search (Elasticsearch): Available");
     } else {
       console.log("  → Semantic search (Elasticsearch): Not available");
