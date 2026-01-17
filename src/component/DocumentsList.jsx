@@ -21,18 +21,22 @@ export default function DocumentsList({ refreshKey }) {
       const response = await fetch("http://localhost:5000/api/documents");
       const data = await response.json();
 
-      const cleanedData = data.filter(
+      const cleanedData = (data || []).filter(
         (doc) =>
+          doc &&
           doc.department &&
+          typeof doc.department === "string" &&
           doc.department.trim() !== ""
       );
 
-      if (user.role === "admin") {
+      if (user && user.role === "admin") {
         setDocuments(cleanedData);
-      } else {
+      } else if (user && user.role) {
         setDocuments(
-          cleanedData.filter((doc) => doc.department === user.role)
+          cleanedData.filter((doc) => doc && doc.department === user.role)
         );
+      } else {
+        setDocuments(cleanedData);
       }
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -62,9 +66,8 @@ export default function DocumentsList({ refreshKey }) {
     let results = data.results || [];
 
 
-    if (user.role !== "admin") {
-      results = results.filter(doc => doc.department === user.role);
-
+    if (user && user.role && user.role !== "admin") {
+      results = (results || []).filter(doc => doc && doc.department === user.role);
     }
     results.sort((a, b) => b.semanticScore - a.semanticScore);
     setDocuments(results);
@@ -94,13 +97,15 @@ export default function DocumentsList({ refreshKey }) {
      NORMAL SEARCH (FRONTEND)
      =========================== */
   const filteredDocuments = documents.filter((doc) => {
+    if (!searchTerm) return true; // Show all if no search term
+
     const term = searchTerm.toLowerCase();
     return (
-      doc.file_name.toLowerCase().includes(term) ||
-      doc.title.toLowerCase().includes(term) ||
-      doc.employee_name.toLowerCase().includes(term) ||
-      doc.department.toLowerCase().includes(term) ||
-      doc.description?.toLowerCase().includes(term)
+      (doc.file_name || "").toLowerCase().includes(term) ||
+      (doc.title || "").toLowerCase().includes(term) ||
+      (doc.employee_name || "").toLowerCase().includes(term) ||
+      (doc.department || "").toLowerCase().includes(term) ||
+      (doc.description || "").toLowerCase().includes(term)
     );
   });
 
@@ -149,14 +154,14 @@ export default function DocumentsList({ refreshKey }) {
                    <tbody>
                     {filteredDocuments.map((doc) =>
                      ( <tr key={doc.id}>
-                       <td>{doc.file_name}</td>
-                       <td>{doc.title}</td>
-                     <td>{doc.description}</td>
-                     <td>{doc.department}</td>
-                     <td>{doc.employee_name}</td>
-                      <td>{new Date(doc.uploaded_at).toLocaleString()}</td>
+                       <td>{doc.file_name || "N/A"}</td>
+                       <td>{doc.title || "N/A"}</td>
+                     <td>{doc.description || "N/A"}</td>
+                     <td>{doc.department || "N/A"}</td>
+                     <td>{doc.employee_name || "N/A"}</td>
+                      <td>{doc.created_at ? new Date(doc.created_at).toLocaleString() : "N/A"}</td>
                       <td className="action-buttons">
-                         <button className="view-btn" onClick={() => viewFile(doc.file_path)} >
+                         <button className="view-btn" onClick={() => doc.file_path && viewFile(doc.file_path)} disabled={!doc.file_path}>
                            Download </button>
                            <button className="delete-btn-document" onClick={() => softDelete(doc.id)} >
                             Delete </button>

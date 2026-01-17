@@ -82,16 +82,16 @@ class Document {
       });
 
       const documents = response.hits.hits.map(hit => ({
-        id: hit._source.document_id,
-        title: hit._source.title,
-        description: hit._source.description,
-        file_name: hit._source.file_name,
-        file_path: hit._source.file_path,
-        employee_name: hit._source.employee_name,
-        employee_id: hit._source.employee_id,
-        department: hit._source.department,
-        created_at: hit._source.created_at,
-        updated_at: hit._source.updated_at,
+        id: hit._source.document_id || null,
+        title: hit._source.title || "",
+        description: hit._source.description || "",
+        file_name: hit._source.file_name || "",
+        file_path: hit._source.file_path || "",
+        employee_name: hit._source.employee_name || "",
+        employee_id: hit._source.employee_id || null,
+        department: hit._source.department || "",
+        created_at: hit._source.created_at || new Date().toISOString(),
+        updated_at: hit._source.updated_at || new Date().toISOString(),
       }));
 
       return documents;
@@ -127,17 +127,17 @@ class Document {
 
       const source = response._source;
       return {
-        id: source.document_id,
-        title: source.title,
-        description: source.description,
-        file_name: source.file_name,
-        file_path: source.file_path,
-        employee_name: source.employee_name,
-        employee_id: source.employee_id,
-        department: source.department,
-        created_at: source.created_at,
-        updated_at: source.updated_at,
-        extracted_text: source.extracted_text,
+        id: source.document_id || null,
+        title: source.title || "",
+        description: source.description || "",
+        file_name: source.file_name || "",
+        file_path: source.file_path || "",
+        employee_name: source.employee_name || "",
+        employee_id: source.employee_id || null,
+        department: source.department || "",
+        created_at: source.created_at || new Date().toISOString(),
+        updated_at: source.updated_at || new Date().toISOString(),
+        extracted_text: source.extracted_text || "",
       };
     } catch (err) {
       // If document not found, return null (not an error)
@@ -177,16 +177,16 @@ class Document {
       });
 
       const documents = response.hits.hits.map(hit => ({
-        id: hit._source.document_id,
-        title: hit._source.title,
-        description: hit._source.description,
-        file_name: hit._source.file_name,
-        file_path: hit._source.file_path,
-        employee_name: hit._source.employee_name,
-        employee_id: hit._source.employee_id,
-        department: hit._source.department,
-        created_at: hit._source.created_at,
-        updated_at: hit._source.updated_at,
+        id: hit._source.document_id || null,
+        title: hit._source.title || "",
+        description: hit._source.description || "",
+        file_name: hit._source.file_name || "",
+        file_path: hit._source.file_path || "",
+        employee_name: hit._source.employee_name || "",
+        employee_id: hit._source.employee_id || null,
+        department: hit._source.department || "",
+        created_at: hit._source.created_at || new Date().toISOString(),
+        updated_at: hit._source.updated_at || new Date().toISOString(),
       }));
 
       return documents;
