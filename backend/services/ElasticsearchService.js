@@ -24,7 +24,7 @@ class ElasticsearchService {
       const connected = await testConnection();
       if (!connected) {
         console.warn(
-          "⚠️  Elasticsearch is not available. Semantic search will be disabled."
+          "  Elasticsearch is not available. Semantic search will be disabled."
         );
         return false;
       }
@@ -34,26 +34,27 @@ class ElasticsearchService {
       console.log("✓ Elasticsearch initialized for embeddings");
       return true;
     } catch (err) {
-      console.warn("⚠️  Elasticsearch initialization error:", err.message);
+      console.warn("  Elasticsearch initialization error:", err.message);
       console.warn("   Semantic search will be disabled.");
       return false;
     }
   }
 
   /**
-   * Save embedding to Elasticsearch
+   * Save full document with extracted text and embedding to Elasticsearch
    * @param {number} documentId - Document ID
    * @param {Array<number>} embedding - Embedding vector
+   * @param {string} extractedText - Extracted text from document
    * @param {Object} documentMetadata - Document metadata
    * @returns {Promise<boolean>}
    */
-  async saveEmbedding(documentId, embedding, documentMetadata = {}) {
+  async saveFullDocument(documentId, embedding, extractedText, documentMetadata = {}) {
     try {
       // Ensure Elasticsearch is initialized
       const initialized = await this.initialize();
       if (!initialized) {
         console.warn(
-          `⚠️  Cannot save embedding for document ${documentId}: Elasticsearch not available`
+          `  Cannot save document ${documentId}: Elasticsearch not available`
         );
         return false;
       }
@@ -65,19 +66,85 @@ class ElasticsearchService {
 
       if (embedding.length !== 384) {
         console.warn(
-          `⚠️  Embedding dimension mismatch: expected 384, got ${embedding.length}`
+          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`
         );
       }
 
-      // Prepare document for Elasticsearch
+      // Prepare full document for Elasticsearch
       const doc = {
         document_id: documentId,
         embedding: embedding,
         title: documentMetadata.title || "",
         description: documentMetadata.description || "",
         file_name: documentMetadata.file_name || "",
+        file_path: documentMetadata.file_path || "",
+        employee_name: documentMetadata.employee_name || "",
         department: documentMetadata.department || "",
         employee_id: documentMetadata.employee_id || null,
+        extracted_text: extractedText || "",
+        created_at: documentMetadata.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Use document_id as the document ID in Elasticsearch
+      await elasticClient.index({
+        index: this.elasticIndexName,
+        id: documentId.toString(),
+        body: doc,
+        refresh: true, // Make it immediately searchable
+      });
+
+      console.log(
+        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
+      );
+      return true;
+    } catch (err) {
+      console.error("✗ Error saving full document to Elasticsearch:", err.message);
+      return false;
+    }
+  }
+
+  /**
+   * Save embedding to Elasticsearch (includes extracted text if provided)
+   * @param {number} documentId - Document ID
+   * @param {Array<number>} embedding - Embedding vector
+   * @param {Object} documentMetadata - Document metadata (can include extracted_text)
+   * @returns {Promise<boolean>}
+   */
+  async saveEmbedding(documentId, embedding, documentMetadata = {}) {
+    try {
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initialize();
+      if (!initialized) {
+        console.warn(
+          `  Cannot save embedding for document ${documentId}: Elasticsearch not available`
+        );
+        return false;
+      }
+
+      // Validate embedding
+      if (!Array.isArray(embedding) || embedding.length === 0) {
+        throw new Error("Embedding must be a non-empty array");
+      }
+
+      if (embedding.length !== 384) {
+        console.warn(
+          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`
+        );
+      }
+
+      // Prepare document for Elasticsearch (now includes extracted_text if provided)
+      const doc = {
+        document_id: documentId,
+        embedding: embedding,
+        title: documentMetadata.title || "",
+        description: documentMetadata.description || "",
+        file_name: documentMetadata.file_name || "",
+        file_path: documentMetadata.file_path || "",
+        employee_name: documentMetadata.employee_name || "",
+        department: documentMetadata.department || "",
+        employee_id: documentMetadata.employee_id || null,
+        extracted_text: documentMetadata.extracted_text || "",
         created_at: documentMetadata.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -96,6 +163,48 @@ class ElasticsearchService {
       return true;
     } catch (err) {
       console.error("✗ Error saving embedding to Elasticsearch:", err.message);
+      return false;
+    }
+  }
+
+  /**
+   * Delete document from Elasticsearch
+   * @param {number} documentId - Document ID
+   * @returns {Promise<boolean>}
+   */
+  async deleteDocument(documentId) {
+    try {
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initialize();
+      if (!initialized) {
+        console.warn(
+          `  Cannot delete document ${documentId}: Elasticsearch not available`
+        );
+        return false;
+      }
+
+      await elasticClient.delete({
+        index: this.elasticIndexName,
+        id: documentId.toString(),
+        refresh: true, // Make deletion immediately visible
+      });
+
+      console.log(
+        `✓ Document ${documentId} deleted from Elasticsearch`
+      );
+      return true;
+    } catch (err) {
+      // If document not found, it's already deleted - not an error
+      if (err.meta?.statusCode === 404) {
+        console.log(
+          `ℹ Document ${documentId} not found in Elasticsearch (already deleted)`
+        );
+        return true;
+      }
+      console.error(
+        "✗ Error deleting document from Elasticsearch:",
+        err.message
+      );
       return false;
     }
   }
@@ -224,7 +333,7 @@ class ElasticsearchService {
       });
 
       console.log(
-        `✅ Returned ${
+        ` Returned ${
           hits.length
         } semantic results from Elasticsearch (avg score: ${(
           hits.reduce((sum, r) => sum + r.semanticScore, 0) / hits.length || 0

@@ -6,7 +6,6 @@ import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import { parse } from "csv-parse/sync";
 import pdfParse from "pdf-parse-fixed";
-import { MeiliSearch } from "meilisearch";
 import { pipeline } from "@xenova/transformers";
 import elasticClient, {
   testConnection,
@@ -15,11 +14,6 @@ import elasticClient, {
 
 class Document {
   constructor() {
-    this.meiliClient = new MeiliSearch({
-      host: process.env.MEILISEARCH_HOST || "http://localhost:7700",
-      apiKey: process.env.MEILISEARCH_API_KEY || "masterKey",
-    });
-    this.indexName = "documents";
     this.elasticIndexName = "document_embeddings";
     this.embedder = null;
     this.maxFileSize = 50 * 1024 * 1024; // 50MB
@@ -36,7 +30,6 @@ class Document {
         console.warn(
           "⚠️  Elasticsearch is not available. Semantic search will be disabled."
         );
-        console.warn("   Text search (MeiliSearch) will still work.");
         return false;
       }
 
@@ -46,132 +39,312 @@ class Document {
       return true;
     } catch (err) {
       console.warn("⚠️  Elasticsearch initialization error:", err.message);
-      console.warn(
-        "   Semantic search will be disabled, but text search will still work."
-      );
+      console.warn("   Semantic search will be disabled.");
       return false;
     }
   }
 
-  //  MeiliSearch Initialization
-  async initializeMeiliSearch() {
-    try {
-      try {
-        await this.meiliClient.getIndex(this.indexName);
-        console.log("✓ MeiliSearch index exists");
-      } catch (err) {
-        await this.meiliClient.createIndex(this.indexName, {
-          primaryKey: "id",
-        });
-        console.log("✓ MeiliSearch index created");
-      }
+  // ========== Document ID Generation ==========
 
-      const index = this.meiliClient.index(this.indexName);
-      await index.updateSettings({
-        searchableAttributes: [
-          "title",
-          "description",
-          "file_name",
-          "employee_name",
-          "department",
-          "extracted_text",
-        ],
-        filterableAttributes: ["department", "employee_id", "id"],
-        sortableAttributes: ["created_at"],
-      });
-
-      console.log("✓ MeiliSearch configured");
-    } catch (err) {
-      console.error("✗ MeiliSearch initialization error:", err.message);
-    }
+  /**
+   * Generate unique document ID
+   * @returns {number} Unique document ID
+   */
+  static generateDocumentId() {
+    // Use timestamp + random number to ensure uniqueness
+    return Date.now() + Math.floor(Math.random() * 1000000);
   }
 
-  //  Database Operations
+  // ========== Elasticsearch Document Operations ==========
+
+  /**
+   * Get all documents from Elasticsearch
+   * @returns {Promise<Array>} Array of documents
+   */
   static async getAll() {
     try {
-      const [rows] = await db.query(
-        "SELECT * FROM documents WHERE is_deleted = 0"
-      );
-      return rows;
+      const documentInstance = new Document();
+      const initialized = await documentInstance.initializeElasticsearch();
+
+      if (!initialized) {
+        console.warn("⚠️  Elasticsearch not available. Cannot retrieve documents.");
+        return [];
+      }
+
+      const response = await elasticClient.search({
+        index: documentInstance.elasticIndexName,
+        body: {
+          query: {
+            match_all: {}
+          },
+          size: 10000, // Get all documents (adjust if needed)
+        }
+      });
+
+      const documents = response.hits.hits.map(hit => ({
+        id: hit._source.document_id,
+        title: hit._source.title,
+        description: hit._source.description,
+        file_name: hit._source.file_name,
+        file_path: hit._source.file_path,
+        employee_name: hit._source.employee_name,
+        employee_id: hit._source.employee_id,
+        department: hit._source.department,
+        created_at: hit._source.created_at,
+        updated_at: hit._source.updated_at,
+      }));
+
+      return documents;
     } catch (err) {
+      console.error("✗ Error getting all documents from Elasticsearch:", err.message);
       throw err;
     }
   }
 
+  /**
+   * Get document by ID from Elasticsearch
+   * @param {number} id - Document ID
+   * @returns {Promise<Object|null>} Document or null if not found
+   */
   static async getById(id) {
     try {
-      const [rows] = await db.query(
-        "SELECT * FROM documents WHERE id = ? and is_deleted = 0",
-        [id]
-      );
-      if (!rows.length) return null;
-      const row = rows[0];
-      return row;
+      const documentInstance = new Document();
+      const initialized = await documentInstance.initializeElasticsearch();
+
+      if (!initialized) {
+        console.warn(`⚠️  Elasticsearch not available. Cannot retrieve document ${id}.`);
+        return null;
+      }
+
+      const response = await elasticClient.get({
+        index: documentInstance.elasticIndexName,
+        id: id.toString(),
+      });
+
+      if (!response.found) {
+        return null;
+      }
+
+      const source = response._source;
+      return {
+        id: source.document_id,
+        title: source.title,
+        description: source.description,
+        file_name: source.file_name,
+        file_path: source.file_path,
+        employee_name: source.employee_name,
+        employee_id: source.employee_id,
+        department: source.department,
+        created_at: source.created_at,
+        updated_at: source.updated_at,
+        extracted_text: source.extracted_text,
+      };
     } catch (err) {
-      throw err;
+      // If document not found, return null (not an error)
+      if (err.meta?.statusCode === 404) {
+        return null;
+      }
+      console.error("✗ Error getting document from Elasticsearch:", err.message);
+      return null;
     }
   }
 
+  /**
+   * Get all documents by department from Elasticsearch
+   * @param {string} department - Department name
+   * @returns {Promise<Array>} Array of documents
+   */
   static async getAllByDepartment(department) {
     try {
-      const [rows] = await db.query(
-        "SELECT * FROM documents WHERE department = ? AND is_deleted = 0",
-        [department]
-      );
-      return rows;
+      const documentInstance = new Document();
+      const initialized = await documentInstance.initializeElasticsearch();
+
+      if (!initialized) {
+        console.warn("⚠️  Elasticsearch not available. Cannot retrieve documents.");
+        return [];
+      }
+
+      const response = await elasticClient.search({
+        index: documentInstance.elasticIndexName,
+        body: {
+          query: {
+            term: {
+              department: department
+            }
+          },
+          size: 10000, // Get all documents (adjust if needed)
+        }
+      });
+
+      const documents = response.hits.hits.map(hit => ({
+        id: hit._source.document_id,
+        title: hit._source.title,
+        description: hit._source.description,
+        file_name: hit._source.file_name,
+        file_path: hit._source.file_path,
+        employee_name: hit._source.employee_name,
+        employee_id: hit._source.employee_id,
+        department: hit._source.department,
+        created_at: hit._source.created_at,
+        updated_at: hit._source.updated_at,
+      }));
+
+      return documents;
     } catch (err) {
+      console.error("✗ Error getting documents by department from Elasticsearch:", err.message);
       throw err;
     }
   }
 
+  /**
+   * Create document (validate employee and return ID for Elasticsearch storage)
+   * Note: Actual storage happens in Elasticsearch via saveFullDocumentToElasticsearch
+   * @param {Object} documentData - Document data
+   * @returns {Promise<number>} Generated document ID
+   */
   static async create(documentData) {
     try {
-      const {
-        file_name,
-        title,
-        description,
-        file_path,
-        employee_name,
-        employee_id,
-        department,
-      } = documentData;
+      const { employee_id } = documentData;
 
+      // Validate employee exists (still check MySQL for employee validation)
       const [empRows] = await db.query(
         "SELECT id FROM employees WHERE id = ?",
         [employee_id]
       );
       if (!empRows.length) throw new Error("Employee ID does not exist");
 
-      const sql = `
-      INSERT INTO documents
-      (file_name, title, description, file_path, employee_name, employee_id, department)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-      const [result] = await db.query(sql, [
-        file_name,
-        title,
-        description,
-        file_path,
-        employee_name,
-        employee_id,
-        department,
-      ]);
+      // Generate unique document ID
+      const documentId = Document.generateDocumentId();
 
-      return result.insertId;
+      // Note: Document is stored in Elasticsearch, not MySQL
+      return documentId;
     } catch (err) {
       throw err;
     }
   }
 
+  /**
+   * Delete document from Elasticsearch (soft delete - actual deletion)
+   * @param {number} id - Document ID
+   * @returns {Promise<Object>} Result object with success status
+   */
   static async softDelete(id) {
     try {
-      const [result] = await db.query(
-        "UPDATE documents SET is_deleted = 1 WHERE id = ?",
-        [id]
-      );
-      return result;
+      const documentInstance = new Document();
+      const deleted = await documentInstance.deleteFromElasticsearch(id);
+
+      return {
+        affectedRows: deleted ? 1 : 0,
+        success: deleted
+      };
     } catch (err) {
-      throw err;
+      console.error("✗ Error deleting document:", err.message);
+      return {
+        affectedRows: 0,
+        success: false
+      };
+    }
+  }
+
+  // ========== Elasticsearch Document Operations ==========
+
+  /**
+   * Delete document from Elasticsearch
+   * @param {number} documentId - Document ID
+   * @returns {Promise<boolean>}
+   */
+  async deleteFromElasticsearch(documentId) {
+    try {
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initializeElasticsearch();
+      if (!initialized) {
+        console.warn(
+          `⚠️  Cannot delete document ${documentId} from Elasticsearch: Elasticsearch not available`
+        );
+        return false;
+      }
+
+      await elasticClient.delete({
+        index: this.elasticIndexName,
+        id: documentId.toString(),
+        refresh: true, // Make deletion immediately visible
+      });
+
+      console.log(
+        `✓ Document ${documentId} deleted from Elasticsearch`
+      );
+      return true;
+    } catch (err) {
+      // If document not found, it's already deleted - not an error
+      if (err.meta?.statusCode === 404) {
+        console.log(
+          `ℹ Document ${documentId} not found in Elasticsearch (already deleted)`
+        );
+        return true;
+      }
+      console.error(
+        "✗ Error deleting document from Elasticsearch:",
+        err.message
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Save full document with extracted text and embedding to Elasticsearch
+   * @param {number} documentId - Document ID
+   * @param {Array<number>} embedding - Embedding vector
+   * @param {string} extractedText - Extracted text from document
+   * @param {Object} documentMetadata - Document metadata
+   * @returns {Promise<boolean>}
+   */
+  async saveFullDocumentToElasticsearch(documentId, embedding, extractedText, documentMetadata = {}) {
+    try {
+      // Ensure Elasticsearch is initialized
+      const initialized = await this.initializeElasticsearch();
+      if (!initialized) {
+        console.warn(
+          `⚠️  Cannot save document ${documentId} to Elasticsearch: Elasticsearch not available`
+        );
+        return false;
+      }
+
+      // Validate embedding
+      if (!Array.isArray(embedding) || embedding.length === 0) {
+        throw new Error("Embedding must be a non-empty array");
+      }
+
+      // Prepare full document for Elasticsearch
+      const doc = {
+        document_id: documentId,
+        embedding: embedding,
+        title: documentMetadata.title || "",
+        description: documentMetadata.description || "",
+        file_name: documentMetadata.file_name || "",
+        file_path: documentMetadata.file_path || "",
+        employee_name: documentMetadata.employee_name || "",
+        department: documentMetadata.department || "",
+        employee_id: documentMetadata.employee_id || null,
+        extracted_text: extractedText || "",
+        created_at: documentMetadata.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Use document_id as the document ID in Elasticsearch
+      await elasticClient.index({
+        index: this.elasticIndexName,
+        id: documentId.toString(),
+        body: doc,
+        refresh: true, // Make it immediately searchable
+      });
+
+      console.log(
+        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
+      );
+      return true;
+    } catch (err) {
+      console.error("✗ Error saving full document to Elasticsearch:", err.message);
+      return false;
     }
   }
 
@@ -274,122 +447,6 @@ class Document {
     return "Unsupported file type";
   }
 
-  //  MeiliSearch Operations
-  async addToMeiliSearch(document, extractedText) {
-    try {
-      const index = this.meiliClient.index(this.indexName);
-
-      const docData = {
-        id: document.id,
-        title: document.title || "",
-        description: document.description || "",
-        file_name: document.file_name || "",
-        file_path: document.file_path || "",
-        employee_name: document.employee_name || "",
-        employee_id: document.employee_id || null,
-        department: document.department || "",
-        extracted_text: extractedText || "",
-        created_at: document.created_at || new Date(),
-      };
-
-      await index.addDocuments([docData]);
-      console.log(`✓ Document ${document.id} indexed in MeiliSearch`);
-      return true;
-    } catch (err) {
-      console.error("✗ Error adding to MeiliSearch:", err.message);
-      return false;
-    }
-  }
-
-  async deleteFromMeiliSearch(documentId) {
-    try {
-      const index = this.meiliClient.index(this.indexName);
-      await index.deleteDocument(documentId);
-      console.log(`✓ Document ${documentId} removed from MeiliSearch`);
-      return true;
-    } catch (err) {
-      console.error("✗ Error deleting from MeiliSearch:", err.message);
-      return false;
-    }
-  }
-
-  async syncAllToMeiliSearch() {
-    try {
-      const documents = await Document.getAll();
-      const index = this.meiliClient.index(this.indexName);
-
-      await index.deleteAllDocuments();
-
-      if (documents.length > 0) {
-        const meiliDocs = [];
-
-        for (const doc of documents) {
-          let extractedText = "";
-
-          if (doc.file_path && fs.existsSync(doc.file_path)) {
-            try {
-              extractedText = await Document.extractFile(
-                doc.file_path,
-                doc.file_name
-              );
-            } catch (err) {
-              console.error(
-                `Error extracting text from ${doc.file_name}:`,
-                err.message
-              );
-            }
-          }
-
-          meiliDocs.push({
-            id: doc.id,
-            title: doc.title || "",
-            description: doc.description || "",
-            file_name: doc.file_name || "",
-            file_path: doc.file_path || "",
-            employee_name: doc.employee_name || "",
-            employee_id: doc.employee_id || null,
-            department: doc.department || "",
-            extracted_text: extractedText,
-            created_at: doc.created_at,
-          });
-        }
-
-        await index.addDocuments(meiliDocs);
-      }
-
-      console.log(`✓ Synced ${documents.length} documents to MeiliSearch`);
-      return documents.length;
-    } catch (err) {
-      console.error("✗ Sync error:", err.message);
-      throw err;
-    }
-  }
-
-  //  Search Operations
-  async search(query, options = {}) {
-    try {
-      const index = this.meiliClient.index(this.indexName);
-
-      const searchOptions = {
-        limit: options.limit || 20,
-        offset: options.offset || 0,
-        filter: options.filter || null,
-      };
-
-      const results = await index.search(query, searchOptions);
-
-      return {
-        hits: results.hits,
-        totalHits: results.estimatedTotalHits,
-        query: results.query,
-        processingTime: results.processingTimeMs,
-      };
-    } catch (err) {
-      console.error("✗ Search error:", err.message);
-      throw err;
-    }
-  }
-
   //  AI Model & Embeddings
   async initializeEmbedder() {
     if (!this.embedder) {
@@ -465,15 +522,18 @@ class Document {
         );
       }
 
-      // Prepare document for Elasticsearch
+      // Prepare document for Elasticsearch (now includes extracted_text if provided)
       const doc = {
         document_id: documentId,
         embedding: embedding,
         title: documentMetadata.title || "",
         description: documentMetadata.description || "",
         file_name: documentMetadata.file_name || "",
+        file_path: documentMetadata.file_path || "",
+        employee_name: documentMetadata.employee_name || "",
         department: documentMetadata.department || "",
         employee_id: documentMetadata.employee_id || null,
+        extracted_text: documentMetadata.extracted_text || "",
         created_at: documentMetadata.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };

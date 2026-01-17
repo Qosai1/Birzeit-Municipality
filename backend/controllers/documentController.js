@@ -1,4 +1,4 @@
-import Document from "../models/document.js";
+import Document, { documentInstance } from "../models/document.js";
 import FileExtractorService from "../services/FileExtractorService.js";
 import { embeddingService } from "../services/EmbeddingService.js";
 import { elasticsearchService } from "../services/ElasticsearchService.js";
@@ -53,33 +53,13 @@ export const getDocumentById = async (req, res) => {
   }
 };
 
-// create new document
+// create new document (deprecated - use uploadFile instead)
 export const createDocument = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
-
-    const file = req.file;
-
-    const { title, description, employee_name, employee_id, department } =
-      req.body;
-
-    const documentData = {
-      file_name: file.originalname,
-      file_path: file.path,
-      title,
-      description,
-      employee_name,
-      employee_id,
-      department,
-    };
-
-    const newDocId = await Document.create(documentData);
-
-    res.status(201).json({
-      success: true,
-      message: "Document created successfully",
-      document_id: newDocId,
+    res.status(400).json({
+      success: false,
+      message: "This endpoint is deprecated. Please use /upload endpoint to upload documents.",
+      alternative_endpoint: "/api/documents/upload",
     });
   } catch (err) {
     res.status(500).json({
@@ -89,28 +69,36 @@ export const createDocument = async (req, res) => {
   }
 };
 
-// SOFT DELETE document
+// DELETE document from Elasticsearch
 export const softDeleteDocument = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
 
-    const [result] = await Document.softDelete(id);
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid document ID",
+      });
+    }
 
-    if (result.affectedRows === 0) {
+    // Delete from Elasticsearch only
+    const result = await Document.softDelete(id);
+
+    if (!result.success || result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: "Document not found",
+        message: "Document not found in Elasticsearch",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Document soft-deleted successfully",
+      message: "Document deleted successfully from Elasticsearch",
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Error soft-deleting document",
+      message: "Error deleting document",
       error: err.message,
     });
   }
@@ -147,39 +135,51 @@ export const uploadFile = async (req, res) => {
       file.originalname
     );
 
-    // 2. Save document to database
+    // 2. Validate employee and generate document ID (no MySQL storage)
     const newDocId = await Document.create(documentData);
 
-    // 3. Retrieve the created document
-    const doc = await Document.getById(newDocId);
+    // 3. Generate embedding and save full document to Elasticsearch
+    try {
+      const fullText = `${title} ${
+        description || ""
+      } ${extractedText}`.substring(0, 5000);
 
-    // 4. Generate embedding asynchronously (in background)
-    setTimeout(async () => {
-      try {
-        const fullText = `${title} ${
-          description || ""
-        } ${extractedText}`.substring(0, 5000);
-        if (fullText.trim().length > 0) {
-          await embeddingService.generateAndSaveEmbedding(
-            newDocId,
-            fullText,
-            {
-              title: title,
-              description: description,
-              file_name: file.originalname,
-              department: department,
-              employee_id: employee_id,
-              created_at: doc.created_at,
-            }
-          );
-          console.log(
-            `✓ Embedding generated and saved to Elasticsearch for document ${newDocId}`
-          );
-        }
-      } catch (err) {
-        console.error(`⚠️  Embedding failed for doc ${newDocId}:`, err.message);
+      if (fullText.trim().length > 0) {
+        // Generate embedding
+        const embedding = await embeddingService.generateEmbedding(fullText);
+
+        const now = new Date().toISOString();
+
+        // Save full document with extracted text to Elasticsearch
+        await documentInstance.saveFullDocumentToElasticsearch(
+          newDocId,
+          embedding,
+          extractedText,
+          {
+            title: title,
+            description: description,
+            file_name: file.originalname,
+            file_path: filePath,
+            employee_name: employee_name,
+            department: department,
+            employee_id: employee_id,
+            created_at: now,
+          }
+        );
+        console.log(
+          `✓ Full document with extracted text saved to Elasticsearch for document ${newDocId}`
+        );
+      } else {
+        throw new Error("No text extracted from file");
       }
-    }, 0);
+    } catch (err) {
+      console.error(`⚠️  Failed to save document to Elasticsearch for doc ${newDocId}:`, err.message);
+      // Clean up uploaded file if Elasticsearch save fails
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      throw err;
+    }
 
     res.json({
       success: true,

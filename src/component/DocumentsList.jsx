@@ -24,8 +24,7 @@ export default function DocumentsList({ refreshKey }) {
       const cleanedData = data.filter(
         (doc) =>
           doc.department &&
-          doc.department.trim() !== "" &&
-          doc.is_deleted === 0
+          doc.department.trim() !== ""
       );
 
       if (user.role === "admin") {
@@ -62,9 +61,7 @@ export default function DocumentsList({ refreshKey }) {
 
     let results = data.results || [];
 
-    results = results.filter(doc => doc.is_deleted === 0 || doc.is_deleted === undefined);
 
- 
     if (user.role !== "admin") {
       results = results.filter(doc => doc.department === user.role);
 
@@ -137,38 +134,38 @@ export default function DocumentsList({ refreshKey }) {
 
       {loading && <p>Searching...</p>}
 
-      <table className="documents-table"> 
+      <table className="documents-table">
         <thead>
            <tr>
-             <th>File Name</th> 
+             <th>File Name</th>
              <th>Title</th>
               <th>Description</th>
-               <th>Department</th> 
+               <th>Department</th>
                <th>Uploaded By</th>
                 <th>Uploaded At</th>
                  <th>Action</th>
                   </tr>
-                   </thead> 
-                   <tbody> 
+                   </thead>
+                   <tbody>
                     {filteredDocuments.map((doc) =>
                      ( <tr key={doc.id}>
-                       <td>{doc.file_name}</td> 
-                       <td>{doc.title}</td> 
-                     <td>{doc.description}</td> 
-                     <td>{doc.department}</td> 
+                       <td>{doc.file_name}</td>
+                       <td>{doc.title}</td>
+                     <td>{doc.description}</td>
+                     <td>{doc.department}</td>
                      <td>{doc.employee_name}</td>
-                      <td>{new Date(doc.uploaded_at).toLocaleString()}</td> 
+                      <td>{new Date(doc.uploaded_at).toLocaleString()}</td>
                       <td className="action-buttons">
                          <button className="view-btn" onClick={() => viewFile(doc.file_path)} >
-                           Download </button> 
-                           <button className="delete-btn-document" onClick={() => softDelete(doc.id)} > 
+                           Download </button>
+                           <button className="delete-btn-document" onClick={() => softDelete(doc.id)} >
                             Delete </button>
                              </td>
                             </tr>
-                           ))} 
-                            </tbody> 
-                            </table> 
-                            {filteredDocuments.length === 0 && <p>No documents found.</p>} 
+                           ))}
+                            </tbody>
+                            </table>
+                            {filteredDocuments.length === 0 && <p>No documents found.</p>}
                             </div>
                              );
                              }
