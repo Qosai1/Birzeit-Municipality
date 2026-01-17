@@ -33,7 +33,7 @@ export default function ScheduleInterview() {
     const { name, value } = e.target;
 
     if (name === "interviewer") {
-      setInterviewerInput(value); // تحديث input البحث
+      setInterviewerInput(value); 
       if (value) {
         fetch(`http://localhost:5000/api/employees?search=${value}`)
           .then((res) => res.json())
@@ -303,10 +303,11 @@ export default function ScheduleInterview() {
         <button type="submit" className="schedule-btn">
           Schedule Interview & Send Email
         </button>
-        <Link to="/interviews" className="view-table-link">
+       
+      </form>
+       <Link to="/interviews" className="view-table-link">
           View Scheduled Interviews
         </Link>
-      </form>
     </div>
   );
 }

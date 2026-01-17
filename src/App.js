@@ -9,6 +9,7 @@ import HrDashboard from "./component/HrDashboard";
 import EmployeeDashboard from "./component/EmployeeDashboard";
 import AdminDashboard from "./component/AdminDashboard";
 import DocumentSearch from './component/DocumentSearch';
+import Interviews from "./component/InterviewsTable";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -63,9 +64,10 @@ export default function App() {
             <Route path="/hr-dashboard/*" element={<HrDashboard user={user} />} />
             <Route path="/employee-dashboard/*" element={<EmployeeDashboard user={user} />} />
             <Route path="/admin-dashboard/*" element={<AdminDashboard user={user} />} />
-
+            <Route path="/interviews" element={<Interviews />} />
             <Route path="*" element={<Navigate to={`/${user.role}-dashboard`} />} />
             <Route path="/hr-dashboard/DocumentSearch" element={<DocumentSearch onSearch={handleSearch} />} />
+                 
 
           </Routes>
         </>

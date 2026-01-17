@@ -11,8 +11,11 @@ import EmployeesChart from "../component/EmployeesChart";
 import FileUploadPage from "./FileUploadPage";
 import DocumentsList from "./DocumentsList";
 import Messages from "./Messages";
+import { useState } from "react";
 
 export default function HrDashboard({ user }) {
+    const [refreshKey, setRefreshKey] = useState(0);
+
   return (
     <div className="hr-dashboard">
       <div className="dashboard-content">
@@ -27,7 +30,10 @@ export default function HrDashboard({ user }) {
               
                  <div className="dashboard-row">
                  <div className="card auto-height">
-                        <FileUploadPage />
+                        <FileUploadPage 
+                         onUploadSuccess={() => setRefreshKey(prev => prev + 1)}
+
+                        />
                   </div>
 
                  <div className="card stretch-height">
@@ -35,7 +41,9 @@ export default function HrDashboard({ user }) {
                     </div>
                    </div>
 
-                 <DocumentsList />
+                 <DocumentsList 
+                 refreshKey={refreshKey}
+                 />
                   
               </div>
             }

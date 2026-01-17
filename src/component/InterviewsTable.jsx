@@ -6,7 +6,8 @@ import InterviewCalendar from "./InterviewCalendar";
 export default function InterviewsTable({ refreshTrigger }) {
   const [interviews, setInterviews] = useState([]);
   const [notification, setNotification] = useState({ type: "", message: "" });
-
+const [showConfirm, setShowConfirm] = useState(false);
+const [selectedEmployee, setSelectedEmployee] = useState(null);
   const showNotification = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification({ type: "", message: "" }), 3000);
@@ -27,7 +28,10 @@ export default function InterviewsTable({ refreshTrigger }) {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
+    if (!selectedEmployee) return;
+      const {id} = selectedEmployee;
+
     try {
       const res = await fetch(`http://localhost:5000/api/interviews/${id}`, {
         method: "DELETE",
@@ -41,7 +45,11 @@ export default function InterviewsTable({ refreshTrigger }) {
     } catch (err) {
       console.error(err);
       showNotification("error", "Server error while deleting interview.");
-    }
+    }finally {
+    setShowConfirm(false);
+    setSelectedEmployee(null);
+  }
+
   };
 
   return (
@@ -81,9 +89,12 @@ export default function InterviewsTable({ refreshTrigger }) {
                 <td>{item.interviewer}</td>
                 <td>{item.location}</td>
                 <td>
-                  <button
+                   <button
                     className="delete-btn"
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => {
+                     setSelectedEmployee({ id: item.id, name: item.name });
+                        setShowConfirm(true);
+                    }}
                   >
                     Delete
                   </button>
@@ -93,6 +104,26 @@ export default function InterviewsTable({ refreshTrigger }) {
           </tbody>
         </table>
       )}
+       {showConfirm && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h3>Disable Employee</h3>
+      <p>
+        Are you sure you want to disable{" "}
+        <strong>{selectedEmployee?.name}</strong>?
+      </p>
+
+      <div className="modal-actions">
+        <button className="btn-cancel" onClick={() => setShowConfirm(false)}>
+          Cancel
+        </button>
+        <button className="btn-confirm" onClick={handleDelete}>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

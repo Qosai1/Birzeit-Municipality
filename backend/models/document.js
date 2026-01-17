@@ -123,6 +123,7 @@ class Document {
       throw err;
     }
   }
+  
 
   static async create(documentData) {
     try {
@@ -136,6 +137,10 @@ class Document {
         department,
       } = documentData;
 
+      const fixedFileName = file_name
+  ? Buffer.from(file_name, "latin1").toString("utf8")
+  : file_name;
+
       const [empRows] = await db.query(
         "SELECT id FROM employees WHERE id = ?",
         [employee_id]
@@ -148,7 +153,7 @@ class Document {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
       const [result] = await db.query(sql, [
-        file_name,
+        fixedFileName,
         title,
         description,
         file_path,

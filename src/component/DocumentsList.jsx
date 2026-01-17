@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-export default function DocumentsList() {
+export default function DocumentsList({ refreshKey }) {
   const [documents, setDocuments] = useState([]);
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,7 +14,7 @@ export default function DocumentsList() {
 
   useEffect(() => {
     if (user) fetchDocuments();
-  }, [user]);
+  }, [user,refreshKey]);
 
   const fetchDocuments = async () => {
     try {

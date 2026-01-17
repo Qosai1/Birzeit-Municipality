@@ -6,11 +6,13 @@ import InterviewsTable from "../component/InterviewsTable";
 import Profile from "../component/Profile";
 import Messages from "./Messages";
 import DocumentsList from "./DocumentsList";
-
+ import { useState } from "react";
 import { HiMiniUsers } from "react-icons/hi2";
 import { TbCalendarUser } from "react-icons/tb";
 
 export default function AdminDashboard({ user }) {
+    const [refreshKey, setRefreshKey] = useState(0);
+
   return (
     <div>
       
@@ -37,7 +39,10 @@ export default function AdminDashboard({ user }) {
 
                 <div className="dashboard-row">
                   <div className="card auto-height">
-                    <FileUploadPage />
+                    <FileUploadPage 
+                            onUploadSuccess={() => setRefreshKey(prev => prev + 1)}
+
+                    />
                   </div>
 
                   <div className="card stretch-height">
@@ -45,7 +50,9 @@ export default function AdminDashboard({ user }) {
                   </div>
                 </div>
 
-                <DocumentsList />
+                <DocumentsList 
+                refreshKey={refreshKey}
+                />
               </>
             }
           />

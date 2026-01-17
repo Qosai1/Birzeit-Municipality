@@ -12,6 +12,9 @@ export default function EmployeesTable() {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [showConfirm, setShowConfirm] = useState(false);
+const [selectedEmployee, setSelectedEmployee] = useState(null);
+
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -47,25 +50,30 @@ export default function EmployeesTable() {
     setFilteredEmployees(filtered);
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to disable ${name}?`)) return;
-    try {
-      const res = await fetch(`http://localhost:5000/api/employees/${id}`, {
-        method: "DELETE",
-      });
+  const handleDelete = async () => {
+  const {id} = selectedEmployee;
 
-      if (res.ok) {
-        showNotification("success", `Employee "${name}" disabled successfully!`);
-        setEmployees(employees.filter((emp) => emp.id !== id));
-        setFilteredEmployees(filteredEmployees.filter((emp) => emp.id !== id));
-      } else {
-        showNotification("error", "Failed to disable employee.");
-      }
-    } catch (err) {
-      console.error(err);
-      showNotification("error", "Server error while disabling employee.");
+  try {
+    const res = await fetch(`http://localhost:5000/api/employees/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      showNotification("success", `Employee disabled successfully!`);
+      setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+      setFilteredEmployees((prev) => prev.filter((emp) => emp.id !== id));
+    } else {
+      showNotification("error", "Failed to disable employee.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    showNotification("error", "Server error while disabling employee.");
+  } finally {
+    setShowConfirm(false);
+    setSelectedEmployee(null);
+  }
+};
+
 
   const handleEditClick = (employee) => {
     setEditingEmployee(employee);
@@ -198,7 +206,10 @@ export default function EmployeesTable() {
                   </button>
                   <button
                     className="delete-btn"
-                    onClick={() => handleDelete(emp.id, emp.fullName)}
+                    onClick={() => {
+                     setSelectedEmployee({ id: emp.id, name: emp.name });
+                        setShowConfirm(true);
+                    }}
                   >
                     Delete
                   </button>
@@ -217,6 +228,29 @@ export default function EmployeesTable() {
           onCancel={() => setEditingEmployee(null)}
         />
       )}
+
+
+      {showConfirm && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h3>Disable Employee</h3>
+      <p>
+        Are you sure you want to disable{" "}
+        <strong>{selectedEmployee?.name}</strong>?
+      </p>
+
+      <div className="modal-actions">
+        <button className="btn-cancel" onClick={() => setShowConfirm(false)}>
+          Cancel
+        </button>
+        <button className="btn-confirm" onClick={handleDelete}>
+          Disable
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

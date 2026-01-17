@@ -3,7 +3,7 @@ import "../style.css";
 import Notification from "./Notification";
 import DocumentsList from "./DocumentsList";
 
-const FileUploadPage = () => {
+const FileUploadPage = ({ onUploadSuccess }) => {
   const [selectedFiles, setSelectedFiles] = useState(null);
   const [fileDescription, setFileDescription] = useState("");
   const [fileContentDescription, setFileContentDescription] = useState("");
@@ -63,6 +63,9 @@ const FileUploadPage = () => {
       if (response.ok) {
         setNotificationType("success");
         setNotificationMessage("File uploaded successfully!");
+          if (onUploadSuccess) {
+              onUploadSuccess();
+               }
       } else {
         setNotificationType("error");
         setNotificationMessage("Failed to upload the file.");

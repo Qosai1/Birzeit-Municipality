@@ -10,9 +10,7 @@ export default function Notification({ type, message, onClose }) {
         {type === "success" ? "✅" : "❌"}
       </span>
       <p>{message}</p>
-      <button className="close-btn" onClick={onClose}>
-        ×
-      </button>
+      
     </div>
   );
 }

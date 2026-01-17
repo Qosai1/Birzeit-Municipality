@@ -4,8 +4,11 @@ import Profile from "../component/Profile.jsx";
 import Messages from "./Messages.jsx";
 import DocumentsList from "./DocumentsList.jsx";
 import "../style.css";
+import { useState } from "react";
 
 export default function EmployeeDashboard({user}) {
+    const [refreshKey, setRefreshKey] = useState(0);
+
   return (
     <div className="employee-dashboard">
    <Routes>
@@ -16,8 +19,14 @@ export default function EmployeeDashboard({user}) {
             element={
               <div>
       
-                  <FileUploadPage />
-                 <DocumentsList />
+                  <FileUploadPage
+                   onUploadSuccess={() => setRefreshKey(prev => prev + 1)}
+
+                  />
+
+                 <DocumentsList
+                 refreshKey={refreshKey}
+                 />
                   
               </div>
             }
