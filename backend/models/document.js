@@ -28,7 +28,7 @@ class Document {
       const connected = await testConnection();
       if (!connected) {
         console.warn(
-          "⚠️  Elasticsearch is not available. Semantic search will be disabled."
+          "⚠️  Elasticsearch is not available. Semantic search will be disabled.",
         );
         return false;
       }
@@ -58,7 +58,7 @@ class Document {
   // ========== Elasticsearch Document Operations ==========
 
   /**
-   * Get all documents from Elasticsearch
+   * Get all documents from Elasticsearch (ignores deleted)
    * @returns {Promise<Array>} Array of documents
    */
   static async getAll() {
@@ -67,7 +67,9 @@ class Document {
       const initialized = await documentInstance.initializeElasticsearch();
 
       if (!initialized) {
-        console.warn("⚠️  Elasticsearch not available. Cannot retrieve documents.");
+        console.warn(
+          "⚠️  Elasticsearch not available. Cannot retrieve documents.",
+        );
         return [];
       }
 
@@ -75,13 +77,15 @@ class Document {
         index: documentInstance.elasticIndexName,
         body: {
           query: {
-            match_all: {}
+            bool: {
+              must: [{ term: { deleted: false } }],
+            },
           },
           size: 10000, // Get all documents (adjust if needed)
-        }
+        },
       });
 
-      const documents = response.hits.hits.map(hit => ({
+      const documents = response.hits.hits.map((hit) => ({
         id: hit._source.document_id || null,
         title: hit._source.title || "",
         description: hit._source.description || "",
@@ -96,7 +100,10 @@ class Document {
 
       return documents;
     } catch (err) {
-      console.error("✗ Error getting all documents from Elasticsearch:", err.message);
+      console.error(
+        "✗ Error getting all documents from Elasticsearch:",
+        err.message,
+      );
       throw err;
     }
   }
@@ -112,7 +119,9 @@ class Document {
       const initialized = await documentInstance.initializeElasticsearch();
 
       if (!initialized) {
-        console.warn(`⚠️  Elasticsearch not available. Cannot retrieve document ${id}.`);
+        console.warn(
+          `⚠️  Elasticsearch not available. Cannot retrieve document ${id}.`,
+        );
         return null;
       }
 
@@ -144,13 +153,16 @@ class Document {
       if (err.meta?.statusCode === 404) {
         return null;
       }
-      console.error("✗ Error getting document from Elasticsearch:", err.message);
+      console.error(
+        "✗ Error getting document from Elasticsearch:",
+        err.message,
+      );
       return null;
     }
   }
 
   /**
-   * Get all documents by department from Elasticsearch
+   * Get all documents by department from Elasticsearch (ignores deleted)
    * @param {string} department - Department name
    * @returns {Promise<Array>} Array of documents
    */
@@ -160,7 +172,9 @@ class Document {
       const initialized = await documentInstance.initializeElasticsearch();
 
       if (!initialized) {
-        console.warn("⚠️  Elasticsearch not available. Cannot retrieve documents.");
+        console.warn(
+          "⚠️  Elasticsearch not available. Cannot retrieve documents.",
+        );
         return [];
       }
 
@@ -168,15 +182,18 @@ class Document {
         index: documentInstance.elasticIndexName,
         body: {
           query: {
-            term: {
-              department: department
-            }
+            bool: {
+              must: [
+                { term: { department: department } },
+                { term: { deleted: false } },
+              ],
+            },
           },
           size: 10000, // Get all documents (adjust if needed)
-        }
+        },
       });
 
-      const documents = response.hits.hits.map(hit => ({
+      const documents = response.hits.hits.map((hit) => ({
         id: hit._source.document_id || null,
         title: hit._source.title || "",
         description: hit._source.description || "",
@@ -191,7 +208,10 @@ class Document {
 
       return documents;
     } catch (err) {
-      console.error("✗ Error getting documents by department from Elasticsearch:", err.message);
+      console.error(
+        "✗ Error getting documents by department from Elasticsearch:",
+        err.message,
+      );
       throw err;
     }
   }
@@ -209,7 +229,7 @@ class Document {
       // Validate employee exists (still check MySQL for employee validation)
       const [empRows] = await db.query(
         "SELECT id FROM employees WHERE id = ?",
-        [employee_id]
+        [employee_id],
       );
       if (!empRows.length) throw new Error("Employee ID does not exist");
 
@@ -224,24 +244,33 @@ class Document {
   }
 
   /**
-   * Delete document from Elasticsearch (soft delete - actual deletion)
+   * Soft delete document in Elasticsearch (mark as deleted)
    * @param {number} id - Document ID
    * @returns {Promise<Object>} Result object with success status
    */
   static async softDelete(id) {
     try {
       const documentInstance = new Document();
-      const deleted = await documentInstance.deleteFromElasticsearch(id);
+
+      // Update the document in Elasticsearch, set deleted=true
+      const response = await elasticClient.update({
+        index: documentInstance.elasticIndexName,
+        id: id.toString(), // ES IDs are strings
+        body: {
+          doc: { deleted: true },
+        },
+        retry_on_conflict: 3, // retry if version conflict
+      });
 
       return {
-        affectedRows: deleted ? 1 : 0,
-        success: deleted
+        affectedRows: response.result === "updated" ? 1 : 0,
+        success: response.result === "updated",
       };
     } catch (err) {
-      console.error("✗ Error deleting document:", err.message);
+      console.error("✗ Error soft deleting document:", err.message);
       return {
         affectedRows: 0,
-        success: false
+        success: false,
       };
     }
   }
@@ -259,7 +288,7 @@ class Document {
       const initialized = await this.initializeElasticsearch();
       if (!initialized) {
         console.warn(
-          `⚠️  Cannot delete document ${documentId} from Elasticsearch: Elasticsearch not available`
+          `⚠️  Cannot delete document ${documentId} from Elasticsearch: Elasticsearch not available`,
         );
         return false;
       }
@@ -270,21 +299,19 @@ class Document {
         refresh: true, // Make deletion immediately visible
       });
 
-      console.log(
-        `✓ Document ${documentId} deleted from Elasticsearch`
-      );
+      console.log(`✓ Document ${documentId} deleted from Elasticsearch`);
       return true;
     } catch (err) {
       // If document not found, it's already deleted - not an error
       if (err.meta?.statusCode === 404) {
         console.log(
-          `ℹ Document ${documentId} not found in Elasticsearch (already deleted)`
+          `ℹ Document ${documentId} not found in Elasticsearch (already deleted)`,
         );
         return true;
       }
       console.error(
         "✗ Error deleting document from Elasticsearch:",
-        err.message
+        err.message,
       );
       return false;
     }
@@ -298,13 +325,18 @@ class Document {
    * @param {Object} documentMetadata - Document metadata
    * @returns {Promise<boolean>}
    */
-  async saveFullDocumentToElasticsearch(documentId, embedding, extractedText, documentMetadata = {}) {
+  async saveFullDocumentToElasticsearch(
+    documentId,
+    embedding,
+    extractedText,
+    documentMetadata = {},
+  ) {
     try {
       // Ensure Elasticsearch is initialized
       const initialized = await this.initializeElasticsearch();
       if (!initialized) {
         console.warn(
-          `⚠️  Cannot save document ${documentId} to Elasticsearch: Elasticsearch not available`
+          `⚠️  Cannot save document ${documentId} to Elasticsearch: Elasticsearch not available`,
         );
         return false;
       }
@@ -328,6 +360,7 @@ class Document {
         extracted_text: extractedText || "",
         created_at: documentMetadata.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        deleted: false,
       };
 
       // Use document_id as the document ID in Elasticsearch
@@ -339,11 +372,14 @@ class Document {
       });
 
       console.log(
-        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
+        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
-      console.error("✗ Error saving full document to Elasticsearch:", err.message);
+      console.error(
+        "✗ Error saving full document to Elasticsearch:",
+        err.message,
+      );
       return false;
     }
   }
@@ -453,7 +489,7 @@ class Document {
       console.log("⏳ Loading AI model...");
       this.embedder = await pipeline(
         "feature-extraction",
-        "Xenova/multilingual-e5-small"
+        "Xenova/multilingual-e5-small",
       );
       console.log("✓ AI model loaded");
     }
@@ -506,7 +542,7 @@ class Document {
       const initialized = await this.initializeElasticsearch();
       if (!initialized) {
         console.warn(
-          `⚠️  Cannot save embedding for document ${documentId}: Elasticsearch not available`
+          `⚠️  Cannot save embedding for document ${documentId}: Elasticsearch not available`,
         );
         return false;
       }
@@ -518,7 +554,7 @@ class Document {
 
       if (embedding.length !== 384) {
         console.warn(
-          `⚠️  Embedding dimension mismatch: expected 384, got ${embedding.length}`
+          `⚠️  Embedding dimension mismatch: expected 384, got ${embedding.length}`,
         );
       }
 
@@ -547,7 +583,7 @@ class Document {
       });
 
       console.log(
-        `✓ Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
+        `✓ Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
@@ -581,7 +617,7 @@ class Document {
       }
       console.error(
         "✗ Error getting embedding from Elasticsearch:",
-        err.message
+        err.message,
       );
       return null;
     }
@@ -606,7 +642,7 @@ class Document {
           try {
             extractedText = await Document.extractFile(
               doc.file_path,
-              doc.file_name
+              doc.file_name,
             );
           } catch (err) {
             console.error(`Error extracting ${doc.file_name}:`, err.message);
@@ -636,7 +672,7 @@ class Document {
 
         processed++;
         console.log(
-          `✓ [${processed}/${documents.length}] Generated embedding for document ${doc.id}`
+          `✓ [${processed}/${documents.length}] Generated embedding for document ${doc.id}`,
         );
       }
 
@@ -656,7 +692,7 @@ class Document {
       const initialized = await this.initializeElasticsearch();
       if (!initialized) {
         throw new Error(
-          "Elasticsearch is not available. Please start Elasticsearch to use semantic search."
+          "Elasticsearch is not available. Please start Elasticsearch to use semantic search.",
         );
       }
 
@@ -739,7 +775,7 @@ class Document {
           hits.length
         } semantic results from Elasticsearch (avg score: ${(
           hits.reduce((sum, r) => sum + r.semanticScore, 0) / hits.length || 0
-        ).toFixed(3)})`
+        ).toFixed(3)})`,
       );
 
       return {

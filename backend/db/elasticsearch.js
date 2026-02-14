@@ -56,7 +56,7 @@ async function testConnection() {
     await Promise.race([
       elasticClient.ping(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Connection timeout")), 5000)
+        setTimeout(() => reject(new Error("Connection timeout")), 5000),
       ),
     ]);
 
@@ -76,7 +76,7 @@ async function testConnection() {
     console.error(`  → Code: ${err.code || "N/A"}`);
 
     console.error(
-      "\n⚠️ Application will continue but Elasticsearch will not work\n"
+      "\n⚠️ Application will continue but Elasticsearch will not work\n",
     );
     return false;
   }
@@ -99,7 +99,7 @@ async function initializeEmbeddingsIndex() {
         index: indexName,
         mappings: {
           properties: {
-            document_id: { type: "integer" },
+            document_id: { type: "long" },
 
             embedding: {
               type: "dense_vector",

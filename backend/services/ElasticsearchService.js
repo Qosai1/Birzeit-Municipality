@@ -24,7 +24,7 @@ class ElasticsearchService {
       const connected = await testConnection();
       if (!connected) {
         console.warn(
-          "  Elasticsearch is not available. Semantic search will be disabled."
+          "  Elasticsearch is not available. Semantic search will be disabled.",
         );
         return false;
       }
@@ -48,13 +48,18 @@ class ElasticsearchService {
    * @param {Object} documentMetadata - Document metadata
    * @returns {Promise<boolean>}
    */
-  async saveFullDocument(documentId, embedding, extractedText, documentMetadata = {}) {
+  async saveFullDocument(
+    documentId,
+    embedding,
+    extractedText,
+    documentMetadata = {},
+  ) {
     try {
       // Ensure Elasticsearch is initialized
       const initialized = await this.initialize();
       if (!initialized) {
         console.warn(
-          `  Cannot save document ${documentId}: Elasticsearch not available`
+          `  Cannot save document ${documentId}: Elasticsearch not available`,
         );
         return false;
       }
@@ -66,7 +71,7 @@ class ElasticsearchService {
 
       if (embedding.length !== 384) {
         console.warn(
-          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`
+          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`,
         );
       }
 
@@ -95,11 +100,14 @@ class ElasticsearchService {
       });
 
       console.log(
-        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
+        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
-      console.error("✗ Error saving full document to Elasticsearch:", err.message);
+      console.error(
+        "✗ Error saving full document to Elasticsearch:",
+        err.message,
+      );
       return false;
     }
   }
@@ -117,7 +125,7 @@ class ElasticsearchService {
       const initialized = await this.initialize();
       if (!initialized) {
         console.warn(
-          `  Cannot save embedding for document ${documentId}: Elasticsearch not available`
+          `  Cannot save embedding for document ${documentId}: Elasticsearch not available`,
         );
         return false;
       }
@@ -129,7 +137,7 @@ class ElasticsearchService {
 
       if (embedding.length !== 384) {
         console.warn(
-          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`
+          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`,
         );
       }
 
@@ -158,7 +166,7 @@ class ElasticsearchService {
       });
 
       console.log(
-        `✓ Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`
+        `✓ Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
@@ -178,7 +186,7 @@ class ElasticsearchService {
       const initialized = await this.initialize();
       if (!initialized) {
         console.warn(
-          `  Cannot delete document ${documentId}: Elasticsearch not available`
+          `  Cannot delete document ${documentId}: Elasticsearch not available`,
         );
         return false;
       }
@@ -189,21 +197,19 @@ class ElasticsearchService {
         refresh: true, // Make deletion immediately visible
       });
 
-      console.log(
-        `✓ Document ${documentId} deleted from Elasticsearch`
-      );
+      console.log(`✓ Document ${documentId} deleted from Elasticsearch`);
       return true;
     } catch (err) {
       // If document not found, it's already deleted - not an error
       if (err.meta?.statusCode === 404) {
         console.log(
-          `ℹ Document ${documentId} not found in Elasticsearch (already deleted)`
+          `ℹ Document ${documentId} not found in Elasticsearch (already deleted)`,
         );
         return true;
       }
       console.error(
         "✗ Error deleting document from Elasticsearch:",
-        err.message
+        err.message,
       );
       return false;
     }
@@ -239,35 +245,30 @@ class ElasticsearchService {
       }
       console.error(
         "✗ Error getting embedding from Elasticsearch:",
-        err.message
+        err.message,
       );
       return null;
     }
   }
 
-  /**
-   * Perform semantic search using vector similarity
-   * @param {Array<number>} queryEmbedding - Query embedding vector
-   * @param {Object} options - Search options (limit, filter)
-   * @returns {Promise<Object>} Search results
-   */
   async semanticSearch(queryEmbedding, options = {}) {
     try {
       // Ensure Elasticsearch is initialized
       const initialized = await this.initialize();
       if (!initialized) {
         throw new Error(
-          "Elasticsearch is not available. Please start Elasticsearch to use semantic search."
+          "Elasticsearch is not available. Please start Elasticsearch to use semantic search.",
         );
       }
 
       // Build filter clauses for KNN query
-      const filterClauses = [];
+      const filterClauses = [
+        { term: { deleted: false } }, // <-- تجاهل كل المستندات المحذوفة
+      ];
 
-      // Add filters if provided
+      // Add user-provided filters
       if (options.filter) {
         if (options.filter.department) {
-          // Support both single department and array of departments
           if (Array.isArray(options.filter.department)) {
             filterClauses.push({
               terms: { department: options.filter.department },
@@ -285,26 +286,17 @@ class ElasticsearchService {
         }
       }
 
-      // Vector similarity search using knn
+      // Vector similarity search using KNN
       const knnQuery = {
         field: "embedding",
         query_vector: queryEmbedding,
         k: options.limit || 20,
-        num_candidates: (options.limit || 20) * 10, // Search more candidates for better results
+        num_candidates: (options.limit || 20) * 10,
+        filter:
+          filterClauses.length === 1
+            ? filterClauses[0]
+            : { bool: { must: filterClauses } },
       };
-
-      // Add filters to KNN query if any (filters must be inside knn object in ES 8.x+)
-      if (filterClauses.length > 0) {
-        if (filterClauses.length === 1) {
-          knnQuery.filter = filterClauses[0];
-        } else {
-          knnQuery.filter = {
-            bool: {
-              must: filterClauses,
-            },
-          };
-        }
-      }
 
       // Build the search request
       const searchBody = {
@@ -322,26 +314,28 @@ class ElasticsearchService {
       const hits = response.hits.hits.map((hit) => {
         const source = hit._source;
         return {
-          id: source.document_id,
-          title: source.title,
-          description: source.description,
-          file_name: source.file_name,
-          department: source.department,
-          employee_id: source.employee_id,
-          semanticScore: hit._score, // Elasticsearch similarity score
+          id: source.document_id || null,
+          title: source.title || "",
+          description: source.description || "",
+          file_name: source.file_name || "",
+          file_path: source.file_path || "",
+          employee_name: source.employee_name || "",
+          employee_id: source.employee_id || null,
+          department: source.department || "",
+          created_at: source.created_at || new Date().toISOString(),
+          updated_at: source.updated_at || new Date().toISOString(),
+          semanticScore: hit._score,
         };
       });
 
       console.log(
-        ` Returned ${
-          hits.length
-        } semantic results from Elasticsearch (avg score: ${(
+        `Returned ${hits.length} semantic results (avg score: ${(
           hits.reduce((sum, r) => sum + r.semanticScore, 0) / hits.length || 0
-        ).toFixed(3)})`
+        ).toFixed(3)})`,
       );
 
       return {
-        hits: hits,
+        hits,
         totalHits: response.hits.total.value,
         searchType: "semantic",
       };
@@ -357,4 +351,3 @@ const elasticsearchService = new ElasticsearchService();
 
 export default ElasticsearchService;
 export { elasticsearchService };
-

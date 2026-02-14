@@ -58,7 +58,8 @@ export const createDocument = async (req, res) => {
   try {
     res.status(400).json({
       success: false,
-      message: "This endpoint is deprecated. Please use /upload endpoint to upload documents.",
+      message:
+        "This endpoint is deprecated. Please use /upload endpoint to upload documents.",
       alternative_endpoint: "/api/documents/upload",
     });
   } catch (err) {
@@ -132,7 +133,7 @@ export const uploadFile = async (req, res) => {
     // 1. Extract text from file
     const extractedText = await FileExtractorService.extractFile(
       filePath,
-      file.originalname
+      file.originalname,
     );
 
     // 2. Validate employee and generate document ID (no MySQL storage)
@@ -164,16 +165,20 @@ export const uploadFile = async (req, res) => {
             department: department,
             employee_id: employee_id,
             created_at: now,
-          }
+            deleted: false,
+          },
         );
         console.log(
-          `✓ Full document with extracted text saved to Elasticsearch for document ${newDocId}`
+          `✓ Full document with extracted text saved to Elasticsearch for document ${newDocId}`,
         );
       } else {
         throw new Error("No text extracted from file");
       }
     } catch (err) {
-      console.error(`⚠️  Failed to save document to Elasticsearch for doc ${newDocId}:`, err.message);
+      console.error(
+        `⚠️  Failed to save document to Elasticsearch for doc ${newDocId}:`,
+        err.message,
+      );
       // Clean up uploaded file if Elasticsearch save fails
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -208,7 +213,8 @@ export const uploadFile = async (req, res) => {
 export const searchDocuments = async (req, res) => {
   res.status(410).json({
     success: false,
-    message: "Text search endpoint has been removed. Please use semantic search instead.",
+    message:
+      "Text search endpoint has been removed. Please use semantic search instead.",
     alternative_endpoint: "/api/documents/search/semantic",
   });
 };
@@ -287,7 +293,7 @@ export const semanticSearchByDepartment = async (req, res) => {
     }
 
     console.log(
-      `🧠 Semantic search by department: "${query}" in "${department}"`
+      `🧠 Semantic search by department: "${query}" in "${department}"`,
     );
 
     // Generate embedding for the query
