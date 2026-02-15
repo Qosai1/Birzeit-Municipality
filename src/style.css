@@ -1535,6 +1535,7 @@ button.upload-btn:hover {
   padding: 12px;
   border-bottom: 1px solid #eee;
   color: white;
+  direction: rtl; 
 }
 
 .documents-table tr:hover {

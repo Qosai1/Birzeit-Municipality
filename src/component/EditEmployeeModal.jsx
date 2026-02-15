@@ -71,7 +71,7 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
           <input
             type="text"
             name="address"
-            value={editForm.address || ""}
+            value={editForm.address ?? ""}
             onChange={onChange}
           />
 
@@ -79,7 +79,7 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
           <input
             type="number"
             name="salary"
-            value={editForm.salary || ""}
+            value={editForm.salary ?? ""}
             onChange={onChange}
           />
 
@@ -87,20 +87,20 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
           <input
             type="date"
             name="startDate"
-            value={editForm.startDate?.slice(0, 10) || ""}
+            value={editForm.startDate?.slice(0, 10) ?? ""}
             onChange={onChange}
           />
 
           <hr />
 
-          {/* ===== بيانات الحساب ===== */}
+
           <h4>Account Information</h4>
 
           <label>Username</label>
           <input
             type="text"
             name="username"
-            value={editForm.username || ""}
+            value={editForm.username ?? ""}
             onChange={onChange}
           />
 
@@ -108,14 +108,14 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
           <input
             type="password"
             name="password"
-            value={editForm.password || ""}
+            value={editForm.password ?? ""}
             onChange={onChange}
           />
 
           <label>Role</label>
           <select
             name="role"
-            value={editForm.role || "employee"}
+            value={editForm.role ?? "employee"}
             onChange={onChange}
           >
             <option value="employee">Employee</option>

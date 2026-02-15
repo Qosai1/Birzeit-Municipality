@@ -47,9 +47,9 @@ export default function DocumentsList({ refreshKey }) {
     window.open(`http://localhost:5000/${filePath}`, "_blank");
   };
 
-  /* ===========================
-     ELASTIC SEARCH (FIXED)
-     =========================== */
+ 
+    // ELASTIC SEARCH (FIXED)
+   
   const elasticSearch = async () => {
   if (!elastic.trim()) return;
 
@@ -93,9 +93,9 @@ export default function DocumentsList({ refreshKey }) {
     }
   };
 
-  /* ===========================
-     NORMAL SEARCH (FRONTEND)
-     =========================== */
+ 
+   //  NORMAL SEARCH (FRONTEND)
+
   const filteredDocuments = documents.filter((doc) => {
     if (!searchTerm) return true; // Show all if no search term
 

@@ -83,32 +83,37 @@ const [selectedEmployee, setSelectedEmployee] = useState(null);
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+     
+      const updatedData = { ...editingEmployee, ...editForm };
+  
       const res = await fetch(
         `http://localhost:5000/api/employees/${editingEmployee.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editForm),
+          body: JSON.stringify(updatedData), 
         }
       );
-      const data = await res.json();
+  
       if (res.ok) {
         showNotification("success", "Employee updated successfully!");
-        const updatedList = employees.map((emp) =>
-          emp.id === editingEmployee.id ? { ...editForm } : emp
+        
+        const updatedList = employees.map(emp =>
+          emp.id === editingEmployee.id ? updatedData : emp
         );
         setEmployees(updatedList);
         setFilteredEmployees(updatedList);
-        setEditingEmployee(null);
+        setEditingEmployee(null); 
       } else {
-        showNotification("error", data.message || "Failed to update employee.");
+        const data = await res.json();
+        showNotification("error", data.message || "Update failed.");
       }
     } catch (err) {
       console.error(err);
-      showNotification("error", "Server error during update.");
+      showNotification("error", "Server error.");
     }
   };
-
+  
   const handleChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };

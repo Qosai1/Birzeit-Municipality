@@ -68,13 +68,12 @@ class Employee {
         ]
       );
 
-      return result.insertId; // Return new employee ID
+      return result.insertId; 
     } catch (error) {
       throw error;
     }
   }
 
-  // Method to update employee
   static async update(id, employeeData) {
     try {
       const {
@@ -90,35 +89,34 @@ class Employee {
         startDate,
         role,
       } = employeeData;
-
+  
       const [result] = await db.query(
         `UPDATE employees
-        SET fullName = ?, email = ?, birthDate = ?, phoneNumber = ?,
-            nationalId = ?, address = ?, homePhone = ?, department = ?,
-            salary = ?, startDate = ?, role = ?
-        WHERE id = ?`,
+         SET fullName = ?, email = ?, birthDate = ?, phoneNumber = ?,
+             nationalId = ?, address = ?, homePhone = ?, department = ?,
+             salary = ?, startDate = ?, role = ?
+         WHERE id = ?`,
         [
-          fullName,
-          email,
-          birthDate,
-          phoneNumber,
-          nationalId,
-          address,
-          homePhone,
-          department,
-          salary,
-          startDate,
-          role,
+          fullName || null,
+          email || null,
+          birthDate ? birthDate.slice(0, 10) : null, 
+          phoneNumber || null,
+          nationalId || null,
+          address || null,
+          homePhone || null,
+          department || null,
+          salary || 0,
+          startDate ? startDate.slice(0, 10) : null, 
+          role || 'employee', 
           id,
         ]
       );
-
+  
       return result.affectedRows;
     } catch (error) {
       throw error;
     }
   }
-
   // Method to delete employee (soft delete)
   static async delete(id) {
     try {
