@@ -15,7 +15,7 @@ export default function Profile() {
     <div className="profile-container">
       <div className="profile-card">
         <div className="profile-header">
-          <FaUserCircle className="profile-icon" />
+         
           <h2>{user.fullName}</h2>
           <p className="profile-position">{user.position}</p>
         </div>

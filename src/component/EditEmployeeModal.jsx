@@ -119,7 +119,7 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             onChange={onChange}
           >
             <option value="employee">Employee</option>
-            <option value="hr">HR</option>
+            <option value="HR">HR</option>
             <option value="admin">Admin</option>
           </select>
 

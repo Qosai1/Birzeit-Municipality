@@ -83,27 +83,25 @@ const [selectedEmployee, setSelectedEmployee] = useState(null);
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-     
-      const updatedData = { ...editingEmployee, ...editForm };
-  
+      // استخدم editForm مباشرة لأنه يحتوي على كل القيم الحالية في الحقول
       const res = await fetch(
         `http://localhost:5000/api/employees/${editingEmployee.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedData), 
+          body: JSON.stringify(editForm), // تأكد أنك ترسل editForm هنا
         }
       );
   
       if (res.ok) {
         showNotification("success", "Employee updated successfully!");
-        
+        // تحديث القائمة في الواجهة
         const updatedList = employees.map(emp =>
-          emp.id === editingEmployee.id ? updatedData : emp
+          emp.id === editingEmployee.id ? { ...editForm } : emp
         );
         setEmployees(updatedList);
         setFilteredEmployees(updatedList);
-        setEditingEmployee(null); 
+        setEditingEmployee(null);
       } else {
         const data = await res.json();
         showNotification("error", data.message || "Update failed.");

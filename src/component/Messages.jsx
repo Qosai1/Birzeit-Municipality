@@ -33,6 +33,7 @@ export default function Messages({ user }) {
   /*  LOCAL STORAGE  */
   useEffect(() => {
     localStorage.setItem("unreadMessages", JSON.stringify(unread));
+    window.dispatchEvent(new Event("unreadUpdated"));
   }, [unread]);
 
   /*  AUDIO  */

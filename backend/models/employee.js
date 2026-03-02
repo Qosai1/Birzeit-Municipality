@@ -1,4 +1,6 @@
 import db from "../db/connection.js";
+import bcrypt from 'bcrypt'; 
+
 
 //  Get all employees
 class Employee {
@@ -74,49 +76,55 @@ class Employee {
     }
   }
 
-  static async update(id, employeeData) {
-    try {
-      const {
-        fullName,
-        email,
-        birthDate,
-        phoneNumber,
-        nationalId,
-        address,
-        homePhone,
-        department,
-        salary,
-        startDate,
-        role,
-      } = employeeData;
-  
-      const [result] = await db.query(
-        `UPDATE employees
-         SET fullName = ?, email = ?, birthDate = ?, phoneNumber = ?,
-             nationalId = ?, address = ?, homePhone = ?, department = ?,
-             salary = ?, startDate = ?, role = ?
-         WHERE id = ?`,
-        [
-          fullName || null,
-          email || null,
-          birthDate ? birthDate.slice(0, 10) : null, 
-          phoneNumber || null,
-          nationalId || null,
-          address || null,
-          homePhone || null,
-          department || null,
-          salary || 0,
-          startDate ? startDate.slice(0, 10) : null, 
-          role || 'employee', 
-          id,
-        ]
-      );
-  
-      return result.affectedRows;
-    } catch (error) {
-      throw error;
+
+static async update(id, employeeData) {
+  try {
+    const {
+      fullName, email, birthDate, phoneNumber, nationalId,
+      address, homePhone, department, salary, startDate,
+      role, username, password 
+    } = employeeData;
+
+    let queryFields = `
+      fullName = ?, email = ?, birthDate = ?, phoneNumber = ?,
+      nationalId = ?, address = ?, homePhone = ?, department = ?,
+      salary = ?, startDate = ?, role = ?, username = ?`;
+    
+    let params = [
+      fullName || null,
+      email || null,
+      birthDate ? birthDate.slice(0, 10) : null,
+      phoneNumber || null,
+      nationalId || null,
+      address || null,
+      homePhone || null,
+      department || null,
+      salary || 0,
+      startDate ? startDate.slice(0, 10) : null,
+      role || 'employee',
+      username || null
+    ];
+
+    if (password && password.trim() !== "") {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      
+      queryFields += `, password = ?`;
+      params.push(hashedPassword);
     }
+
+    params.push(id);
+
+    const [result] = await db.query(
+      `UPDATE employees SET ${queryFields} WHERE id = ?`,
+      params
+    );
+
+    return result.affectedRows;
+  } catch (error) {
+    throw error;
   }
+}
   // Method to delete employee (soft delete)
   static async delete(id) {
     try {

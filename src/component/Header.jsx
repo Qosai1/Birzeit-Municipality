@@ -14,18 +14,24 @@ export default function Header({ user, onLogout }) {
 
   const chatPath = `${dashboardPath}/messages`;
   const [unreadCount, setUnreadCount] = useState(0);
-
+ 
   useEffect(() => {
     const calcUnread = () => {
       const data = JSON.parse(localStorage.getItem("unreadMessages")) || {};
       const total = Object.values(data).reduce((sum, v) => sum + v, 0);
       setUnreadCount(total);
     };
-
+  
     calcUnread();
-
+  
+    // هذا السطر هو "البطل" هنا.. سيحدث الـ State فور إطلاق الـ Event
+    window.addEventListener("unreadUpdated", calcUnread);
     window.addEventListener("storage", calcUnread);
-    return () => window.removeEventListener("storage", calcUnread);
+  
+    return () => {
+      window.removeEventListener("unreadUpdated", calcUnread);
+      window.removeEventListener("storage", calcUnread);
+    };
   }, []);
   return (
     <header className="header">
@@ -42,7 +48,6 @@ export default function Header({ user, onLogout }) {
           Profile
         </Link>
 
-        {/* 🔥 زر الشات */}
         <Link to={chatPath} className="nav-link chat-link">
   Chat
   {unreadCount > 0 && (
