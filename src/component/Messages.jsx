@@ -159,13 +159,43 @@ export default function Messages({ user }) {
 
   const deleteConversation = async () => {
     if (!selectedConversation) return;
-    if (!window.confirm("Delete this conversation?")) return;
-    await fetch(`${API}/conversations/${selectedConversation}`, { method: "DELETE" });
-    setConversations((prev) => prev.filter((c) => Number(c.conversationId) !== selectedConversation));
-    setSelectedConversation(null);
-    setMessages([]);
+  
+    // Confirmation dialog in English
+    const confirmDelete = window.confirm("Are you sure you want to permanently delete this conversation?");
+    if (!confirmDelete) return;
+  
+    try {
+      // Send delete request to the server
+      const res = await fetch(`${API}/conversations/${selectedConversation}`, { 
+        method: "DELETE" 
+      });
+  
+      if (res.ok) {
+        // 1. Remove the conversation from the sidebar list
+        setConversations((prev) => 
+          prev.filter((c) => Number(c.conversationId) !== selectedConversation)
+        );
+  
+        // 2. Reset the active chat view
+        setSelectedConversation(null);
+        setMessages([]);
+  
+        // 3. Clear unread badges for this specific conversation
+        setUnread((prev) => {
+          const updated = { ...prev };
+          delete updated[selectedConversation];
+          return updated;
+        });
+  
+        alert("Conversation deleted successfully.");
+      } else {
+        alert("Failed to delete the conversation from the server.");
+      }
+    } catch (err) {
+      console.error("Delete Error:", err);
+      alert("An error occurred while trying to delete the conversation.");
+    }
   };
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -212,9 +242,17 @@ export default function Messages({ user }) {
         {selectedConversation ? (
           <>
             <div className="chat-header">
-              <button className="delete-chat-btn" onClick={deleteConversation}>Delete Chat</button>
-            </div>
+        <div className="chat-info">
+          Chat with {conversations.find(c => Number(c.conversationId) === selectedConversation)?.otherUser}
+        </div>
+        <button className="delete-chat-btn" onClick={deleteConversation}>
+          Delete Chat
+        </button>
+      </div>
             <div className="messages-area">
+            <button className="delete-chat-btn" onClick={deleteConversation}>
+          Delete Chat
+        </button>
               {messages.map((msg) => {
                 const src = msg.file_path ? (msg.file_path.startsWith("blob:") ? msg.file_path : `http://localhost:5000${msg.file_path}`) : null;
                 return (

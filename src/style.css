@@ -1881,6 +1881,7 @@ button.upload-btn:hover {
 
 /*  Delete Chat Button  */
 .delete-chat-btn {
+  position: fixed;
   background-color: #ff4d4f;  
   color: white;
   border: none;
@@ -1891,17 +1892,12 @@ button.upload-btn:hover {
   cursor: pointer;
 }
 
-/* hover */
-.delete-chat-btn:hover {
-  background-color: #d9363e;
-}
-
 /* Start new chat section */
 .start-chat {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
-  align-items: center; /* لتوسيط العناصر عموديًا */
+  align-items: center; 
 }
 
 /* Dropdowns */

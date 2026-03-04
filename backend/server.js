@@ -242,6 +242,22 @@ app.get("/api/documents/stats/count", async (req, res) => {
   res.json({ totalDocuments: count });
 });
 
+app.delete("/api/conversations/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("DELETE FROM messages WHERE conversation_id = ?", [id]);
+    
+    await db.query("DELETE FROM conversation_participants WHERE conversation_id = ?", [id]);
+    
+    await db.query("DELETE FROM conversations WHERE id = ?", [id]);
+
+    res.json({ success: true, message: "Conversation deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete conversation" });
+  }
+});
+
 /*  OTHER ROUTES  */
 
 app.use("/api/employees", employeesRoutes);
