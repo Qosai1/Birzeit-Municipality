@@ -52,22 +52,22 @@ const userSockets = new Map(); // userId => Set(socketId)
 const getSocketsOfUser = (userId) =>
   userSockets.get(Number(userId)) || new Set();
 
-/*  SOCKET LOGIC  */
-
+/* SOCKET LOGIC  */
 io.on("connection", (socket) => {
-  console.log(" Connected:", socket.id);
 
   socket.on("register_user", (userId) => {
     const uid = Number(userId);
+    socket.join(`user_${uid}`); 
+    if (!uid) return;
+
+    socket.join(`user_${uid}`); 
 
     if (!userSockets.has(uid)) {
       userSockets.set(uid, new Set());
     }
-
     userSockets.get(uid).add(socket.id);
     socket.userId = uid;
-
-    console.log(" User registered:", uid);
+    console.log(" User registered and joined private room:", uid);
   });
 
   socket.on("join_conversation", (conversationId) => {
@@ -158,15 +158,17 @@ app.get("/api/conversations/user/:id", async (req, res) => {
 
   const [rows] = await db.query(
     `
-    SELECT
-      c.id AS conversationId,
-      e.fullName AS otherUser,
-      e.role AS otherRole
+    SELECT 
+      c.id AS conversationId, 
+      e.fullName AS otherUser, 
+      e.role AS otherRole,
+      (SELECT MAX(created_at) FROM messages WHERE conversation_id = c.id) as last_msg_time
     FROM conversations c
     JOIN conversation_participants cp1 ON cp1.conversation_id = c.id
     JOIN conversation_participants cp2 ON cp2.conversation_id = c.id AND cp2.user_id != cp1.user_id
     JOIN employees e ON e.id = cp2.user_id
     WHERE cp1.user_id = ?
+    ORDER BY last_msg_time DESC  -- الترتيب حسب وقت آخر رسالة
   `,
     [userId]
   );
@@ -193,6 +195,7 @@ app.get("/api/messages/:conversationId", async (req, res) => {
 });
 
 //   Send message ()
+//  Send message ()
 app.post(
   "/api/messages/:conversationId",
   upload.single("file"),
@@ -200,15 +203,11 @@ app.post(
     const convId = Number(req.params.conversationId);
     const senderId = Number(req.body.senderId);
     const text = req.body.text || null;
-
     const filePath = req.file ? `/uploads/${req.file.filename}` : null;
     const fileName = req.file ? req.file.originalname : null;
 
     const [r] = await db.query(
-      `
-      INSERT INTO messages (conversation_id, sender_id, text, file_path, file_name)
-      VALUES (?, ?, ?, ?, ?)
-    `,
+      `INSERT INTO messages (conversation_id, sender_id, text, file_path, file_name) VALUES (?, ?, ?, ?, ?)`,
       [convId, senderId, text, filePath, fileName]
     );
 
@@ -222,7 +221,18 @@ app.post(
       created_at: new Date().toISOString(),
     };
 
+    const [participants] = await db.query(
+      `SELECT user_id FROM conversation_participants WHERE conversation_id = ?`,
+      [convId]
+    );
+
     io.to(`conversation_${convId}`).emit("new_message", message);
+
+    participants.forEach(p => {
+      if (p.user_id !== senderId) {
+        io.to(`user_${p.user_id}`).emit("new_message", message);
+      }
+    });
 
     res.json({ sent: true });
   }

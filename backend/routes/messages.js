@@ -28,7 +28,7 @@ export default function Messages({ user }) {
   const currentRoomRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  /* ================= CONNECT SOCKET ================= */
+  /*  CONNECT SOCKET  */
   useEffect(() => {
     const socket = io(SOCKET_URL, {
       transports: ["polling", "websocket"],
@@ -38,39 +38,61 @@ export default function Messages({ user }) {
     return () => socket.disconnect();
   }, []);
 
-  /* ================= SCROLL ================= */
+  /*  SCROLL  */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* ================= SOCKET LISTENER ================= */
-  useEffect(() => {
-    if (!socketRef.current) return;
+/*  SOCKET LISTENER  */
+useEffect(() => {
+  if (!socketRef.current) return;
 
-    const socket = socketRef.current;
+  const socket = socketRef.current;
 
-    const onMessage = (msg) => {
-      const convId = Number(msg.conversation_id);
-      console.log("SOCKET MSG:", convId, "ACTIVE:", selectedConversation);
+  const onMessage = (msg) => {
+    const convId = Number(msg.conversation_id);
 
-      if (convId === selectedConversation) {
-        setMessages((prev) => [...prev, msg]);
-      } else {
-        setUnread((prev) => ({
-          ...prev,
-          [convId]: (prev[convId] || 0) + 1,
-        }));
+    if (convId === selectedConversation) {
+      setMessages((prev) => [...prev, msg]);
+    } else {
+      setUnread((prev) => {
+        const updated = { ...prev, [convId]: (prev[convId] || 0) + 1 };
+        
+        localStorage.setItem("unreadMessages", JSON.stringify(updated));
+        window.dispatchEvent(new Event("unreadUpdated")); 
+        
+        return updated;
+      });
 
-        setBanner("📩 New message");
-        setTimeout(() => setBanner(null), 2000);
-      }
-    };
+      setBanner(" New message");
+      setTimeout(() => setBanner(null), 2000);
+    }
+  };
 
-    socket.on("new_message", onMessage);
-    return () => socket.off("new_message", onMessage);
-  }, [selectedConversation]);
+  socket.on("new_message", onMessage);
+  return () => socket.off("new_message", onMessage);
+}, [selectedConversation]);
 
-  /* ================= JOIN / LEAVE ROOM ================= */
+const openChat = async (conversationId) => {
+  const convId = Number(conversationId);
+
+  setSelectedConversation(convId);
+  
+  setUnread((prev) => {
+    const updated = { ...prev, [convId]: 0 };
+    localStorage.setItem("unreadMessages", JSON.stringify(updated));
+    
+    window.dispatchEvent(new Event("unreadUpdated"));
+    
+    return updated;
+  });
+
+  const res = await fetch(`${API}/messages/${convId}`);
+  const data = await res.json();
+  setMessages(data);
+};
+
+  /*  JOIN / LEAVE ROOM  */
   useEffect(() => {
     if (!socketRef.current || !selectedConversation) return;
 
@@ -88,7 +110,7 @@ export default function Messages({ user }) {
     console.log("JOINED:", selectedConversation);
   }, [selectedConversation]);
 
-  /* ================= FETCH DATA ================= */
+  /*  FETCH DATA  */
   useEffect(() => {
     fetch(`${API}/departments`)
       .then((res) => res.json())
@@ -109,19 +131,8 @@ export default function Messages({ user }) {
       .then(setConversations);
   }, [userId]);
 
-  /* ================= OPEN CHAT ================= */
-  const openChat = async (conversationId) => {
-    const convId = Number(conversationId);
-
-    setSelectedConversation(convId);
-    setUnread((prev) => ({ ...prev, [convId]: 0 }));
-
-    const res = await fetch(`${API}/messages/${convId}`);
-    const data = await res.json();
-    setMessages(data);
-  };
-
-  /* ================= START CHAT ================= */
+ 
+  /*  START CHAT  */
   const startConversation = async () => {
     if (!selectedUser) return;
 
@@ -135,7 +146,7 @@ export default function Messages({ user }) {
     openChat(data.conversationId);
   };
 
-  /* ================= SEND MESSAGE ================= */
+  /*  SEND MESSAGE  */
   const sendMessage = async () => {
     if (!selectedConversation || (!text && !file)) return;
 
@@ -157,7 +168,7 @@ export default function Messages({ user }) {
     <div className="messages-page">
       {banner && <div className="notification-banner">{banner}</div>}
 
-      {/* ================= SIDEBAR ================= */}
+      {/*  SIDEBAR  */}
       <div className="sidebar">
         <h3>Chats</h3>
 
@@ -183,7 +194,7 @@ export default function Messages({ user }) {
         </div>
       </div>
 
-      {/* ================= CHAT ================= */}
+      {/*  CHAT  */}
       <div className="chat-window">
         {selectedConversation ? (
           <>

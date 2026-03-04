@@ -28,53 +28,24 @@ export default function Messages({ user }) {
 
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const notificationAudio = useRef(null);
 
-  /*  LOCAL STORAGE  */
   useEffect(() => {
     localStorage.setItem("unreadMessages", JSON.stringify(unread));
     window.dispatchEvent(new Event("unreadUpdated"));
   }, [unread]);
 
-  /*  AUDIO  */
   useEffect(() => {
-    const audio = new Audio("/message.wav");
-    audio.volume = 0;
-    notificationAudio.current = audio;
-
-    const unlockAudio = () => {
-      audio
-        .play()
-        .then(() => {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.volume = 1;
-        })
-        .catch(() => {});
-      window.removeEventListener("click", unlockAudio);
-    };
-
-    window.addEventListener("click", unlockAudio);
-    return () => window.removeEventListener("click", unlockAudio);
-  }, []);
-
-  /*  SOCKET CONNECT  */
-  useEffect(() => {
-    const socket = io(SOCKET_URL, {
-      transports: ["polling", "websocket"],
-    });
+    const socket = io(SOCKET_URL, { transports: ["polling", "websocket"] });
     socketRef.current = socket;
     return () => socket.disconnect();
   }, []);
 
-  /*  REGISTER USER  */
   useEffect(() => {
     if (socketRef.current && userId) {
       socketRef.current.emit("register_user", userId);
     }
   }, [userId]);
 
-  /*  SOCKET LISTENER  */
   useEffect(() => {
     if (!socketRef.current) return;
     const socket = socketRef.current;
@@ -82,9 +53,16 @@ export default function Messages({ user }) {
     const onNewMessage = (msg) => {
       const convId = Number(msg.conversation_id);
 
-      if (Number(msg.sender_id) === userId) return;
+      setConversations((prev) => {
+        const existingIndex = prev.findIndex(c => Number(c.conversationId) === convId);
+        if (existingIndex === -1) return prev; 
 
-      notificationAudio.current?.play().catch(() => {});
+        const newConversations = [...prev];
+        const [movedItem] = newConversations.splice(existingIndex, 1);
+        return [movedItem, ...newConversations];
+      });
+
+      if (Number(msg.sender_id) === userId) return;
 
       if (convId === selectedConversation) {
         setMessages((prev) => [...prev, msg]);
@@ -100,75 +78,16 @@ export default function Messages({ user }) {
     return () => socket.off("new_message", onNewMessage);
   }, [selectedConversation, userId]);
 
-  /*  FETCH CONVERSATIONS  */
-  useEffect(() => {
-    if (!userId) return;
-    fetch(`${API}/conversations/user/${userId}`)
-      .then((res) => res.json())
-      .then(setConversations);
-  }, [userId]);
-   /*  FETCH DEPARTMENTS & USERS */
-  useEffect(() => {
-    fetch(`${API}/departments`)
-      .then((res) => res.json())
-      .then(setDepartments);
-  }, []);
-
-  useEffect(() => {
-    if (!selectedDept) return;
-    fetch(`${API}/employees/department/${selectedDept}`)
-      .then((res) => res.json())
-      .then(setUsers);
-  }, [selectedDept]);
-
-  /*  FETCH CONVERSATIONS  */
-  useEffect(() => {
-    if (!userId) return;
-    fetch(`${API}/conversations/user/${userId}`)
-      .then((res) => res.json())
-      .then(setConversations);
-  }, [userId]);
-
- /*  START NEW CONVERSATION */
-  const startConversation = async () => {
-    if (!selectedUser) return;
-
-    const res = await fetch(`${API}/conversations/start`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user1: userId, user2: selectedUser }),
-    });
-
-    const data = await res.json();
-    openChat(data.conversationId);
-  };
-  /*  JOIN ROOMS  */
-  useEffect(() => {
-    if (!socketRef.current) return;
-    conversations.forEach((c) =>
-      socketRef.current.emit("join_conversation", Number(c.conversationId))
-    );
-  }, [conversations]);
-
-  /*  OPEN CHAT  */
-  const openChat = async (conversationId) => {
-    const convId = Number(conversationId);
-    setSelectedConversation(convId);
-
-    setUnread((prev) => {
-      const updated = { ...prev };
-      delete updated[convId];
-      return updated;
-    });
-
-    const res = await fetch(`${API}/messages/${convId}`);
-    const data = await res.json();
-    setMessages(data);
-  };
-
-  /*  SEND MESSAGE  */
   const sendMessage = async () => {
     if (!selectedConversation || (!text && !file)) return;
+
+    setConversations((prev) => {
+      const existingIndex = prev.findIndex(c => Number(c.conversationId) === selectedConversation);
+      if (existingIndex === -1) return prev;
+      const newConversations = [...prev];
+      const [movedItem] = newConversations.splice(existingIndex, 1);
+      return [movedItem, ...newConversations];
+    });
 
     const form = new FormData();
     form.append("senderId", userId);
@@ -184,114 +103,103 @@ export default function Messages({ user }) {
       file_name: file?.name,
       created_at: new Date().toISOString(),
     };
-
     setMessages((prev) => [...prev, optimistic]);
 
-    await fetch(`${API}/messages/${selectedConversation}`, {
-      method: "POST",
-      body: form,
-    });
-
+    await fetch(`${API}/messages/${selectedConversation}`, { method: "POST", body: form });
     setText("");
     setFile(null);
   };
 
-  /*  DELETE CONVERSATION  */
+  /* ================= FETCH DATA ================= */
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`${API}/conversations/user/${userId}`)
+      .then((res) => res.json())
+      .then(setConversations);
+  }, [userId]);
+
+  useEffect(() => {
+    fetch(`${API}/departments`).then((res) => res.json()).then(setDepartments);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDept) return;
+    fetch(`${API}/employees/department/${selectedDept}`).then((res) => res.json()).then(setUsers);
+  }, [selectedDept]);
+
+  const openChat = async (conversationId) => {
+    const convId = Number(conversationId);
+    setSelectedConversation(convId);
+    setUnread((prev) => {
+      const updated = { ...prev };
+      delete updated[convId];
+      return updated;
+    });
+
+    const res = await fetch(`${API}/messages/${convId}`);
+    const data = await res.json();
+    setMessages(data);
+  };
+
+  const startConversation = async () => {
+    if (!selectedUser) return;
+    const res = await fetch(`${API}/conversations/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user1: userId, user2: selectedUser }),
+    });
+    const data = await res.json();
+    
+    const refreshRes = await fetch(`${API}/conversations/user/${userId}`);
+    const refreshData = await refreshRes.json();
+    setConversations(refreshData);
+    
+    openChat(data.conversationId);
+  };
+
   const deleteConversation = async () => {
     if (!selectedConversation) return;
     if (!window.confirm("Delete this conversation?")) return;
-
-    await fetch(`${API}/conversations/${selectedConversation}`, {
-      method: "DELETE",
-    });
-
-    setConversations((prev) =>
-      prev.filter(
-        (c) => Number(c.conversationId) !== selectedConversation
-      )
-    );
-
+    await fetch(`${API}/conversations/${selectedConversation}`, { method: "DELETE" });
+    setConversations((prev) => prev.filter((c) => Number(c.conversationId) !== selectedConversation));
     setSelectedConversation(null);
     setMessages([]);
-
-    setUnread((prev) => {
-      const copy = { ...prev };
-      delete copy[selectedConversation];
-      return copy;
-    });
   };
 
-  /*  AUTOSCROLL  */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const formatTime = (d) =>
-    new Date(d).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const formatTime = (d) => new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  /*  UI  */
   return (
     <div className="messages-page">
-      {/*  SIDEBAR  */}
       <div className="sidebar">
         <h3>Chats</h3>
-
-        {/* START NEW CHAT */}
         <div className="start-chat">
-          <select
-            value={selectedDept}
-            onChange={(e) => {
-              setSelectedDept(e.target.value);
-              setSelectedUser("");
-            }}
-          >
+          <select value={selectedDept} onChange={(e) => { setSelectedDept(e.target.value); setSelectedUser(""); }}>
             <option value="">Select Department</option>
-            {departments.map((d) => (
-              <option key={d.department} value={d.department}>
-                {d.department}
-              </option>
-            ))}
+            {departments.map((d) => (<option key={d.department} value={d.department}>{d.department}</option>))}
           </select>
-
-          <select
-            value={selectedUser}
-            onChange={(e) => setSelectedUser(e.target.value)}
-            disabled={!selectedDept}
-          >
+          <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} disabled={!selectedDept}>
             <option value="">Select Employee</option>
-            {users.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.fullName}
-              </option>
-            ))}
+            {users.map((emp) => (<option key={emp.id} value={emp.id}>{emp.fullName}</option>))}
           </select>
         </div>
-        <button className="btnStart" onClick={startConversation} disabled={!selectedUser}>
-            Start
-          </button>
+        <button className="btnStart" onClick={startConversation} disabled={!selectedUser}>Start</button>
+        
         <div className="chat-list">
           {conversations.map((c) => {
             const convId = Number(c.conversationId);
             return (
-              <div
-                key={convId}
-                className={`chat-item ${
-                  selectedConversation === convId ? "active" : ""
-                }`}
-                onClick={() => openChat(convId)}
-              >
+              <div key={convId} className={`chat-item ${selectedConversation === convId ? "active" : ""}`} onClick={() => openChat(convId)}>
                 <div className="chat-name-row">
                   <div className="chat-text">
                     <div className="chat-name">{c.otherUser}</div>
                     <div className="chat-department">{c.otherRole}</div>
                   </div>
                   {unread[convId] > 0 && (
-                    <span className="unread-badge">
-                      {unread[convId] > 9 ? "9+" : unread[convId]}
-                    </span>
+                    <span className="unread-badge">{unread[convId] > 9 ? "9+" : unread[convId]}</span>
                   )}
                 </div>
               </div>
@@ -300,89 +208,32 @@ export default function Messages({ user }) {
         </div>
       </div>
 
-      {/*  CHAT WINDOW  */}
       <div className="chat-window">
         {selectedConversation ? (
           <>
-            {/* HEADER */}
             <div className="chat-header">
-              <button className="delete-chat-btn" onClick={deleteConversation}>
-                Delete Chat
-              </button>
+              <button className="delete-chat-btn" onClick={deleteConversation}>Delete Chat</button>
             </div>
-
             <div className="messages-area">
               {messages.map((msg) => {
-                const src = msg.file_path
-                  ? msg.file_path.startsWith("blob:")
-                    ? msg.file_path
-                    : `http://localhost:5000${msg.file_path}`
-                  : null;
-
+                const src = msg.file_path ? (msg.file_path.startsWith("blob:") ? msg.file_path : `http://localhost:5000${msg.file_path}`) : null;
                 return (
-                  <div
-                    key={msg.id}
-                    className={`message ${
-                      msg.sender_id === userId ? "me" : "other"
-                    }`}
-                  >
+                  <div key={msg.id} className={`message ${msg.sender_id === userId ? "me" : "other"}`}>
                     <div className="bubble">
                       {msg.text && <p>{msg.text}</p>}
-
-                      {src && /\.(jpg|jpeg|png|gif)$/i.test(src) && (
-                        <img
-                          src={src}
-                          className="chat-image"
-                          onClick={() => setOpenedImage(src)}
-                        />
-                      )}
-
-                      {src && !/\.(jpg|jpeg|png|gif)$/i.test(src) && (
-                        <a href={src} target="_blank" rel="noreferrer">
-                          📎 {msg.file_name}
-                        </a>
-                      )}
-
-                      <span className="message-time">
-                        {formatTime(msg.created_at)}
-                      </span>
+                      {src && /\.(jpg|jpeg|png|gif)$/i.test(src) && (<img src={src} className="chat-image" onClick={() => setOpenedImage(src)} />)}
+                      {src && !/\.(jpg|jpeg|png|gif)$/i.test(src) && (<a href={src} target="_blank" rel="noreferrer">📎 {msg.file_name}</a>)}
+                      <span className="message-time">{formatTime(msg.created_at)}</span>
                     </div>
                   </div>
                 );
               })}
               <div ref={messagesEndRef} />
             </div>
-
             <div className="input-area">
-              <input
-                value={text}
-                placeholder="Type a message..."
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-              />
-
-              <button
-                className="file-btn"
-                onClick={() =>
-                  document.getElementById("file-input").click()
-                }
-              >
-                📎
-              </button>
-
-              <input
-                id="file-input"
-                type="file"
-                hidden
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-
+              <input value={text} placeholder="Type a message..." onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} />
+              <button className="file-btn" onClick={() => document.getElementById("file-input").click()}>📎</button>
+              <input id="file-input" type="file" hidden accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif" onChange={(e) => setFile(e.target.files[0])} />
               <button onClick={sendMessage}>Send</button>
             </div>
           </>
@@ -391,14 +242,9 @@ export default function Messages({ user }) {
         )}
       </div>
 
-      {/* IMAGE VIEWER */}
       {openedImage && (
         <div className="image-viewer" onClick={() => setOpenedImage(null)}>
-          <img
-            src={openedImage}
-            className="viewer-image"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <img src={openedImage} className="viewer-image" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

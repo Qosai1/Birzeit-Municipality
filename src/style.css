@@ -1984,3 +1984,32 @@ button.upload-btn:hover {
   border-radius: 4px;
   cursor: pointer;
 }
+
+.global-notification-banner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 9999;
+  animation: slideIn 0.5s ease-out;
+}
+
+.global-notification-banner a {
+  color: #00d1b2;
+  text-decoration: none;
+  font-weight: bold;
+  border-left: 1px solid #555;
+  padding-left: 15px;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
