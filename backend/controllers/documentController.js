@@ -163,12 +163,12 @@ export const uploadFile = async (req, res) => {
           },
         );
         
-        console.log(`✓ Full document saved to Elasticsearch with Arabic support: ${correctedFileName}`);
+        console.log(` Full document saved to Elasticsearch with Arabic support: ${correctedFileName}`);
       } else {
         throw new Error("No text extracted from file");
       }
     } catch (err) {
-      console.error(`⚠️ Failed to save to Elasticsearch for doc ${newDocId}:`, err.message);
+      console.error(` Failed to save to Elasticsearch for doc ${newDocId}:`, err.message);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       throw err;
     }
@@ -181,7 +181,7 @@ export const uploadFile = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ File upload error:", error);
+    console.error(" File upload error:", error);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     res.status(500).json({
       success: false,
@@ -213,7 +213,7 @@ export const semanticSearchDocuments = async (req, res) => {
       });
     }
 
-    console.log(`🧠 Semantic search: "${query}"`);
+    console.log(` Semantic search: "${query}"`);
 
     // Parse filter if provided (expects JSON string)
     let parsedFilter = null;
@@ -275,7 +275,7 @@ export const semanticSearchByDepartment = async (req, res) => {
     }
 
     console.log(
-      `🧠 Semantic search by department: "${query}" in "${department}"`,
+      ` Semantic search by department: "${query}" in "${department}"`,
     );
 
     // Generate embedding for the query
@@ -307,7 +307,7 @@ export const semanticSearchByDepartment = async (req, res) => {
 //  Generate Embeddings for All Documents 
 export const generateAllEmbeddings = async (req, res) => {
   try {
-    console.log("⏳ Generating embeddings...");
+    console.log(" Generating embeddings...");
     const count = await embeddingService.generateAllEmbeddings();
 
     res.status(200).json({

@@ -5,8 +5,8 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
   if (!editForm) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <div className="modal1-overlay">
+      <div className="modal1">
         <h3>Edit Employee</h3>
         <form onSubmit={onSave} className="edit-form">
 
@@ -123,7 +123,7 @@ export default function EditEmployeeModal({ editForm, onChange, onSave, onCancel
             <option value="admin">Admin</option>
           </select>
 
-          <div className="modal-buttons">
+          <div className="modal1-buttons">
             <button type="submit" className="save-btn">
               Save Changes
             </button>

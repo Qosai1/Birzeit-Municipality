@@ -31,7 +31,7 @@ class ElasticsearchService {
 
       await initializeEmbeddingsIndex();
       this.initialized = true;
-      console.log("✓ Elasticsearch initialized for embeddings");
+      console.log(" Elasticsearch initialized for embeddings");
       return true;
     } catch (err) {
       console.warn("  Elasticsearch initialization error:", err.message);
@@ -100,12 +100,12 @@ class ElasticsearchService {
       });
 
       console.log(
-        `✓ Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
+        ` Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
       console.error(
-        "✗ Error saving full document to Elasticsearch:",
+        " Error saving full document to Elasticsearch:",
         err.message,
       );
       return false;
@@ -166,11 +166,11 @@ class ElasticsearchService {
       });
 
       console.log(
-        `✓ Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
+        ` Embedding saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
-      console.error("✗ Error saving embedding to Elasticsearch:", err.message);
+      console.error(" Error saving embedding to Elasticsearch:", err.message);
       return false;
     }
   }
@@ -244,7 +244,7 @@ class ElasticsearchService {
         return null;
       }
       console.error(
-        "✗ Error getting embedding from Elasticsearch:",
+        " Error getting embedding from Elasticsearch:",
         err.message,
       );
       return null;
@@ -263,7 +263,7 @@ class ElasticsearchService {
 
       // Build filter clauses for KNN query
       const filterClauses = [
-        { term: { deleted: false } }, // <-- تجاهل كل المستندات المحذوفة
+        { term: { deleted: false } }, 
       ];
 
       // Add user-provided filters
@@ -340,11 +340,32 @@ class ElasticsearchService {
         searchType: "semantic",
       };
     } catch (err) {
-      console.error("✗ Semantic search error:", err.message);
+      console.error(" Semantic search error:", err.message);
       throw err;
     }
   }
+
+  async getDocumentsCount() {
+    try {
+      await this.initialize();
+  
+      const response = await elasticClient.count({
+        index: this.elasticIndexName,
+        body: {
+          query: {
+            term: { deleted: false } 
+          }
+        }
+      });
+  
+      return response.count !== undefined ? response.count : response.body.count;
+    } catch (err) {
+      console.error(" Error counting active documents:", err.message);
+      return 0;
+    }
+  }
 }
+
 
 // Export singleton instance
 const elasticsearchService = new ElasticsearchService();

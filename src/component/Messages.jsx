@@ -110,7 +110,7 @@ export default function Messages({ user }) {
     setFile(null);
   };
 
-  /* ================= FETCH DATA ================= */
+  /*  FETCH DATA  */
   useEffect(() => {
     if (!userId) return;
     fetch(`${API}/conversations/user/${userId}`)

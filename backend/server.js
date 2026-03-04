@@ -195,7 +195,6 @@ app.get("/api/messages/:conversationId", async (req, res) => {
 });
 
 //   Send message ()
-//  Send message ()
 app.post(
   "/api/messages/:conversationId",
   upload.single("file"),
@@ -238,6 +237,11 @@ app.post(
   }
 );
 
+app.get("/api/documents/stats/count", async (req, res) => {
+  const count = await elasticsearchService.getDocumentsCount();
+  res.json({ totalDocuments: count });
+});
+
 /*  OTHER ROUTES  */
 
 app.use("/api/employees", employeesRoutes);
@@ -260,7 +264,7 @@ app.use("/api/auth", authRoutes);
       console.log("  → Semantic search (Elasticsearch): Not available");
     }
   } catch (err) {
-    console.error("⚠️  Initialization warning:", err.message);
+    console.error("  Initialization warning:", err.message);
   }
 })();
 
