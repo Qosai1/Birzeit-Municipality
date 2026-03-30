@@ -1,144 +1,203 @@
 # Birzeit Municipality Project
 
-A full-stack application with a React frontend and Node.js/Express backend.
+A complete municipality management platform for HR, document tracking, scheduling, and communication. The project includes:
 
-## Project Structure
+- React-based responsive frontend for users and administrators
+- Node.js + Express backend with REST API, authentication, and file management
+- MySQL database for persistent record storage
+- Elasticsearch for fast document search and embeddings
+- Real-time messaging and calendar support via Socket.io
+
+## 🚀 Full Description
+
+`Birzeit Municipality Project` is designed to digitalize internal municipal workflows. It includes:
+
+- Employee CRUD and role management (HR, admin, employee)
+- Document upload, OCR/enrichment
+- Interview scheduling with calendar view and timeslot handling
+- Real-time notifications and messaging
+- Dashboard analytics and charts (employee stats, interview status)
+- Secure access control with JWT
+
+## 📁 Project Structure
 
 ```
 birzeit-municipality/
 ├── backend/                 # Backend API (Node.js/Express)
-│   ├── controllers/         # Route controllers
-│   ├── db/                  # Database connection
-│   ├── middlewares/         # Express middlewares
-│   ├── models/              # Database models
-│   ├── routes/              # API routes
-│   ├── uploads/             # File uploads directory
-│   ├── server.js            # Backend entry point
-│   └── package.json         # Backend dependencies
+│   ├── controllers/         # API controllers (auth, employees, docs, scheduling)
+│   ├── db/                  # Database + search connection utilities
+│   ├── middlewares/         # Auth, authorization, error handling
+│   ├── models/              # Sequelize/Mongo schema models (Employee, Document, Interview)
+│   ├── routes/              # Express routes
+│   ├── services/            # Business logic and external integration (Elasticsearch, embeddings)
+│   ├── uploads/             # Uploaded documents storage
+│   ├── server.js            # Backend entrypoint and socket setup
+│   └── package.json         # Backend dependencies and scripts
 │
-├── public/                  # React public assets
+├── public/                  # React public static folder
 │   ├── index.html
-│   ├── favicon.ico
+│   ├── manifest.json
+│   └── robots.txt
+│
+├── src/                     # React app source
+│   ├── component/           # Reusable UI components
+│   ├── App.js               # Main router and global state
+│   ├── index.js             # React DOM renderer
+│   ├── style.css
 │   └── ...
 │
-├── src/                     # React application source
-│   ├── component/           # React components
-│   ├── App.js               # Main App component
-│   ├── index.js             # React entry point
-│   └── ...
-│
-├── package.json             # Frontend dependencies
+├── package.json             # Frontend dependencies and scripts
 └── README.md                # This file
 ```
 
-## Getting Started
+## 🛠️ Features
+
+- Authentication: Sign In / Sign Out, role-based permissions
+- Employee Management: Add/Edit/Delete, profile and status handling
+- Documents: Upload CSV/PDF/DOCX, search, download, OCR metadata
+- Document Search: Elasticsearch integration for content search
+- Interviews: Create, view, update scheduling with calendar overview
+- Real-time: WebSocket messaging (admin/employee communication)
+- Dashboard: Charts, KPIs, quick actions, counts
+
+## 🔧 Setup
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js v14+
 - npm or yarn
-- MySQL database
+- MySQL server (or configured database)
+- Elasticsearch instance (for document search)
 
-### Installation
+### Install dependencies
 
-1. **Install frontend dependencies:**
+1. Root frontend:
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. **Install backend dependencies:**
-   ```bash
-   cd backend
-   npm install
-   cd ..
-   ```
+2. Backend:
 
-### Running the Application
+```bash
+cd backend
+npm install
+cd ..
+```
 
-#### Development Mode
+### Configure environment
 
-**Option 1: Run both frontend and backend together:**
+Create `backend/.env`:
+
+```ini
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=secret
+DB_NAME=birzeit_municipality
+JWT_SECRET=your_jwt_secret
+PORT=5000
+
+# Optional
+SEARCH_HOST=http://localhost:9200
+SEARCH_INDEX=documents
+```
+
+## ▶️ Run
+
+### Development
+
+- Start backend first:
+
+```bash
+cd backend
+npm run dev
+```
+
+- Start frontend:
+
+```bash
+npm start
+```
+
+- Optional combined (if `start:all` script exists):
 
 ```bash
 npm run start:all
 ```
 
-**Option 2: Run separately:**
-
-Terminal 1 - Backend:
-
-```bash
-cd backend
-npm start
-```
-
-Terminal 2 - Frontend:
-
-```bash
-npm start
-```
-
-#### Production Build
-
-Build the React app:
+### Production
 
 ```bash
 npm run build
 ```
 
-The build folder will contain the production-ready React app.
+Then serve `build/` through static server and run backend as production node app.
 
-## Environment Variables
+## 📌 API Endpoints (Backend)
 
-### Backend
+### Auth
 
-Create a `.env` file in the `backend/` directory with:
+- `POST /api/auth/login` - login
+- `POST /api/auth/register` - register
 
-```
-DB_HOST=your_db_host
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=your_db_name
-JWT_SECRET=your_jwt_secret
-PORT=5000
-```
+### Employees
 
-## Available Scripts
+- `GET /api/employees` - list employees
+- `POST /api/employees` - create employee
+- `PUT /api/employees/:id` - update employee
+- `DELETE /api/employees/:id` - delete employee
 
-### Frontend (Root)
+### Documents
 
-- `npm start` - Runs the React app in development mode
-- `npm run build` - Builds the app for production
-- `npm test` - Launches the test runner
-- `npm run start:all` - Runs both backend and frontend concurrently
+- `GET /api/documents` - list
+- `POST /api/documents` - upload
+- `GET /api/documents/search?q=` - search
 
-### Backend
+### Interviews
 
-- `npm start` - Runs the backend server
-- `npm run dev` - Runs the backend with nodemon (auto-restart)
+- `GET /api/interviews`
+- `POST /api/interviews`
+- `PUT /api/interviews/:id`
 
-## Technology Stack
+### Messages
 
-### Frontend
+- `GET /api/messages`
+- `POST /api/messages`
 
-- React 19.2.0
-- React Router DOM
-- Axios
-- FullCalendar
-- Recharts
-- Socket.io Client
+## 🧪 Testing
 
-### Backend
+- Frontend:
+  - `npm test`
 
-- Node.js
-- Express 5.1.0
-- MySQL2
-- Socket.io
-- JWT Authentication
-- Multer (file uploads)
-- Meilisearch
+- Backend:
+  - `cd backend` then `npm test` (if tests exist)
 
-## License
+## 📦 Project Scripts
+
+Root:
+
+- `npm start` - React dev
+- `npm run build` - React production build
+- `npm run start:all` - run backend and frontend concurrently
+
+Backend:
+
+- `npm start` - run server
+- `npm run dev` - nodemon dev
+
+## 🌐 Deployment Notes
+
+- Set environment variables in target hosting platform
+- Build React app and point express to serve from `build/` (optional)
+- Ensure DB migrations/seeders are run before startup
+
+## 👥 Contributing
+
+1. Fork repo
+2. Create feature branch
+3. Add tests
+4. Submit pull request with description
+
+## 📜 License
 
 ISC

@@ -9,7 +9,7 @@ import elasticClient, {
  */
 class ElasticsearchService {
   constructor() {
-    this.elasticIndexName = "document_embeddings";
+    this.elasticIndexName = "document_embeddings_v2";
     this.initialized = false;
   }
 
@@ -59,7 +59,7 @@ class ElasticsearchService {
       const initialized = await this.initialize();
       if (!initialized) {
         console.warn(
-          `  Cannot save document ${documentId}: Elasticsearch not available`,
+          `Cannot save document ${documentId}: Elasticsearch not available`,
         );
         return false;
       }
@@ -69,27 +69,33 @@ class ElasticsearchService {
         throw new Error("Embedding must be a non-empty array");
       }
 
-      if (embedding.length !== 384) {
-        console.warn(
-          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`,
-        );
+      // Normalize embedding to 1024 dimensions
+      const EMBEDDING_DIM = 1024;
+      let normalizedEmbedding = embedding.slice(0, EMBEDDING_DIM); // if longer, cut
+      if (normalizedEmbedding.length < EMBEDDING_DIM) {
+        normalizedEmbedding = normalizedEmbedding.concat(
+          Array(EMBEDDING_DIM - normalizedEmbedding.length).fill(0),
+        ); // if shorter, pad with 0
       }
 
       // Prepare full document for Elasticsearch
       const doc = {
         document_id: documentId,
-        embedding: embedding,
         title: documentMetadata.title || "",
+        embedding: normalizedEmbedding, // use actual embedding
         description: documentMetadata.description || "",
         file_name: documentMetadata.file_name || "",
         file_path: documentMetadata.file_path || "",
         employee_name: documentMetadata.employee_name || "",
         department: documentMetadata.department || "",
         employee_id: documentMetadata.employee_id || null,
+        deleted: documentMetadata.deleted === true ? true : false,
         extracted_text: extractedText || "",
         created_at: documentMetadata.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
+
+      console.log("doc:", doc);
 
       // Use document_id as the document ID in Elasticsearch
       await elasticClient.index({
@@ -100,12 +106,12 @@ class ElasticsearchService {
       });
 
       console.log(
-        ` Full document saved to Elasticsearch for document ${documentId} (${embedding.length} dimensions)`,
+        `Full document saved to Elasticsearch for document ${documentId} (${normalizedEmbedding.length} dimensions)`,
       );
       return true;
     } catch (err) {
       console.error(
-        " Error saving full document to Elasticsearch:",
+        "Error saving full document to Elasticsearch:",
         err.message,
       );
       return false;
@@ -135,9 +141,9 @@ class ElasticsearchService {
         throw new Error("Embedding must be a non-empty array");
       }
 
-      if (embedding.length !== 384) {
+      if (embedding.length !== 1024) {
         console.warn(
-          `  Embedding dimension mismatch: expected 384, got ${embedding.length}`,
+          `  Embedding dimension mismatch: expected 1024, got ${embedding.length}`,
         );
       }
 
@@ -152,6 +158,7 @@ class ElasticsearchService {
         employee_name: documentMetadata.employee_name || "",
         department: documentMetadata.department || "",
         employee_id: documentMetadata.employee_id || null,
+        deleted: documentMetadata.deleted === true ? true : false,
         extracted_text: documentMetadata.extracted_text || "",
         created_at: documentMetadata.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -261,10 +268,8 @@ class ElasticsearchService {
         );
       }
 
-      // Build filter clauses for KNN query
-      const filterClauses = [
-        { term: { deleted: false } }, 
-      ];
+      // Build filter clauses for KNN query (must)
+      const filterClauses = [];
 
       // Add user-provided filters
       if (options.filter) {
@@ -292,10 +297,12 @@ class ElasticsearchService {
         query_vector: queryEmbedding,
         k: options.limit || 20,
         num_candidates: (options.limit || 20) * 10,
-        filter:
-          filterClauses.length === 1
-            ? filterClauses[0]
-            : { bool: { must: filterClauses } },
+        filter: {
+          bool: {
+            ...(filterClauses.length > 0 ? { must: filterClauses } : {}),
+            must_not: [{ term: { deleted: true } }],
+          },
+        },
       };
 
       // Build the search request
@@ -348,24 +355,27 @@ class ElasticsearchService {
   async getDocumentsCount() {
     try {
       await this.initialize();
-  
+
       const response = await elasticClient.count({
         index: this.elasticIndexName,
         body: {
           query: {
-            term: { deleted: false } 
-          }
-        }
+            bool: {
+              must_not: [{ term: { deleted: true } }],
+            },
+          },
+        },
       });
-  
-      return response.count !== undefined ? response.count : response.body.count;
+
+      return response.count !== undefined
+        ? response.count
+        : response.body.count;
     } catch (err) {
       console.error(" Error counting active documents:", err.message);
       return 0;
     }
   }
 }
-
 
 // Export singleton instance
 const elasticsearchService = new ElasticsearchService();

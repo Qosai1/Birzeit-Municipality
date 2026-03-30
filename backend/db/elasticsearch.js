@@ -86,15 +86,19 @@ async function testConnection() {
 // Initialize Index
 // =====================
 async function initializeEmbeddingsIndex() {
-  const indexName = "document_embeddings";
+  const indexName = "document_embeddings_v2";
 
   try {
-    const exists = await elasticClient.indices.exists({
+    const existsResponse = await elasticClient.indices.exists({
       index: indexName,
     });
 
-    // ✅ v8 returns exists.body
-    if (!exists.body) {
+    const exists =
+      typeof existsResponse === "boolean"
+        ? existsResponse
+        : (existsResponse.body ?? existsResponse);
+
+    if (!exists) {
       await elasticClient.indices.create({
         index: indexName,
         mappings: {
@@ -103,7 +107,7 @@ async function initializeEmbeddingsIndex() {
 
             embedding: {
               type: "dense_vector",
-              dims: 384,
+              dims: 1024,
               index: true,
               similarity: "cosine",
             },
@@ -133,6 +137,12 @@ async function initializeEmbeddingsIndex() {
 
     return true;
   } catch (err) {
+    // If another instance created it concurrently, that's fine
+    if (err.meta?.body?.error?.type === "resource_already_exists_exception") {
+      console.log(`✓ Index "${indexName}" already exists`);
+      return true;
+    }
+
     console.error("✗ Error creating index:", err.message);
     return false;
   }

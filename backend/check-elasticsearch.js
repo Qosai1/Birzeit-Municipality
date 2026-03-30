@@ -57,18 +57,16 @@ async function checkConnection() {
     }
     console.log("");
 
-    // Test 4: Check document_embeddings index
-    console.log(" Checking document_embeddings index...");
+    // Test 4: Check document_embeddings_v2 index
+    console.log(" Checking document_embeddings_v2 index...");
     const indexExists = await client.indices.exists({
-      index: "document_embeddings",
+      index: "document_embeddings_v2",
     });
     if (indexExists) {
-      const count = await client.count({ index: "document_embeddings" });
+      const count = await client.count({ index: "document_embeddings_v2" });
       console.log(`    Index exists with ${count.count} documents\n`);
     } else {
-      console.log(
-        "     Index does not exist (will be created on first use)\n"
-      );
+      console.log("     Index does not exist (will be created on first use)\n");
     }
 
     console.log(" All checks passed! Elasticsearch is ready to use.");
@@ -92,7 +90,7 @@ async function checkConnection() {
     ) {
       console.error(" Authentication failed.");
       console.error(
-        "   → Check ELASTICSEARCH_USERNAME and ELASTICSEARCH_PASSWORD in .env"
+        "   → Check ELASTICSEARCH_USERNAME and ELASTICSEARCH_PASSWORD in .env",
       );
       console.error("   → Or disable security: xpack.security.enabled=false\n");
     }

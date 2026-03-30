@@ -1,4 +1,4 @@
-import Document, { documentInstance } from "../models/document.js";
+import Document from "../models/document.js";
 import FileExtractorService from "../services/FileExtractorService.js";
 import { embeddingService } from "../services/EmbeddingService.js";
 import { elasticsearchService } from "../services/ElasticsearchService.js";
@@ -105,7 +105,7 @@ export const softDeleteDocument = async (req, res) => {
   }
 };
 
-//  Upload File + Embeddings 
+//  Upload File + Embeddings
 export const uploadFile = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -116,13 +116,16 @@ export const uploadFile = async (req, res) => {
 
   const file = req.file;
   const filePath = file.path;
-  
-  const correctedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-  
-  const { title, description, employee_name, employee_id, department } = req.body;
+
+  const correctedFileName = Buffer.from(file.originalname, "latin1").toString(
+    "utf8",
+  );
+
+  const { title, description, employee_name, employee_id, department } =
+    req.body;
 
   const documentData = {
-    file_name: correctedFileName, 
+    file_name: correctedFileName,
     file_path: filePath,
     title,
     description,
@@ -134,41 +137,57 @@ export const uploadFile = async (req, res) => {
   try {
     const extractedText = await FileExtractorService.extractFile(
       filePath,
-      correctedFileName 
+      correctedFileName,
     );
 
     const newDocId = await Document.create(documentData);
 
     try {
-      const fullText = `${title} ${description || ""} ${extractedText}`.substring(0, 5000);
+      const fullText =
+        `${title} ${description || ""} ${extractedText}`.substring(0, 5000);
 
       if (fullText.trim().length > 0) {
         const embedding = await embeddingService.generateEmbedding(fullText);
         const now = new Date().toISOString();
+        console.log(
+          "Saving document to Elasticsearch...\n embedding:",
+          embedding,
+        );
 
-        await documentInstance.saveFullDocumentToElasticsearch(
+        const saved = await elasticsearchService.saveFullDocument(
           newDocId,
           embedding,
           extractedText,
           {
-            title: title,
-            description: description,
+            title,
+            description,
             file_name: correctedFileName,
             file_path: filePath,
-            employee_name: employee_name,
-            department: department,
-            employee_id: employee_id,
+            employee_name,
+            department,
+            employee_id,
             created_at: now,
             deleted: false,
           },
         );
-        
-        console.log(` Full document saved to Elasticsearch with Arabic support: ${correctedFileName}`);
+
+        if (!saved) {
+          throw new Error(
+            "Failed to save document (with embedding) to Elasticsearch",
+          );
+        }
+
+        console.log(
+          ` Full document saved to Elasticsearch with Arabic support: ${correctedFileName}`,
+        );
       } else {
         throw new Error("No text extracted from file");
       }
     } catch (err) {
-      console.error(` Failed to save to Elasticsearch for doc ${newDocId}:`, err.message);
+      console.error(
+        ` Failed to save to Elasticsearch for doc ${newDocId}:`,
+        err.message,
+      );
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       throw err;
     }
@@ -176,10 +195,9 @@ export const uploadFile = async (req, res) => {
     res.json({
       success: true,
       document_id: newDocId,
-      fileName: correctedFileName, 
+      fileName: correctedFileName,
       extractedText,
     });
-
   } catch (error) {
     console.error(" File upload error:", error);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -191,7 +209,7 @@ export const uploadFile = async (req, res) => {
   }
 };
 
-//  Text Search (Removed - MeiliSearch deleted) 
+//  Text Search (Removed - MeiliSearch deleted)
 export const searchDocuments = async (req, res) => {
   res.status(410).json({
     success: false,
@@ -201,7 +219,7 @@ export const searchDocuments = async (req, res) => {
   });
 };
 
-//  Semantic Search 
+//  Semantic Search
 export const semanticSearchDocuments = async (req, res) => {
   try {
     const { query, limit, filter } = req.query;
@@ -254,7 +272,7 @@ export const semanticSearchDocuments = async (req, res) => {
   }
 };
 
-//  Semantic Search by Department 
+//  Semantic Search by Department
 export const semanticSearchByDepartment = async (req, res) => {
   try {
     const { query, limit } = req.query;
@@ -304,7 +322,7 @@ export const semanticSearchByDepartment = async (req, res) => {
   }
 };
 
-//  Generate Embeddings for All Documents 
+//  Generate Embeddings for All Documents
 export const generateAllEmbeddings = async (req, res) => {
   try {
     console.log(" Generating embeddings...");

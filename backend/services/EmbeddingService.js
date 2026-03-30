@@ -19,10 +19,7 @@ class EmbeddingService {
   async initializeEmbedder() {
     if (!this.embedder) {
       console.log("⏳ Loading AI model...");
-      this.embedder = await pipeline(
-        "feature-extraction",
-        "Xenova/multilingual-e5-small"
-      );
+      this.embedder = await pipeline("feature-extraction", "Xenova/bge-m3");
       console.log("✓ AI model loaded");
     }
   }
@@ -43,11 +40,22 @@ class EmbeddingService {
       const cleanedText = text.trim().substring(0, 5000);
 
       const output = await this.embedder(cleanedText, {
-        pooling: "mean",
+        pooling: "cls",
         normalize: true,
       });
 
-      return Array.from(output.data);
+      const embeddingArray = Array.from(output.data);
+
+      // Debug: print small sample of embedding to terminal
+      console.log(
+        "🔎 Embedding generated:",
+        "length =",
+        embeddingArray.length,
+        "| first 5 values =",
+        embeddingArray.slice(0, 5),
+      );
+
+      return embeddingArray;
     } catch (err) {
       console.error("✗ Embedding error:", err.message);
       throw err;
@@ -92,12 +100,12 @@ class EmbeddingService {
       return await elasticsearchService.saveEmbedding(
         documentId,
         embedding,
-        documentMetadata
+        documentMetadata,
       );
     } catch (err) {
       console.error(
         `✗ Error generating/saving embedding for document ${documentId}:`,
-        err.message
+        err.message,
       );
       return false;
     }
@@ -116,7 +124,7 @@ class EmbeddingService {
 
       for (const doc of documents) {
         const existingEmbedding = await elasticsearchService.getEmbedding(
-          doc.id
+          doc.id,
         );
         if (existingEmbedding) {
           console.log(`⏭️  Document ${doc.id} already has embedding`);
@@ -128,7 +136,7 @@ class EmbeddingService {
           try {
             extractedText = await FileExtractorService.extractFile(
               doc.file_path,
-              doc.file_name
+              doc.file_name,
             );
           } catch (err) {
             console.error(`Error extracting ${doc.file_name}:`, err.message);
@@ -155,7 +163,7 @@ class EmbeddingService {
 
         processed++;
         console.log(
-          `✓ [${processed}/${documents.length}] Generated embedding for document ${doc.id}`
+          `✓ [${processed}/${documents.length}] Generated embedding for document ${doc.id}`,
         );
       }
 
@@ -173,4 +181,3 @@ const embeddingService = new EmbeddingService();
 
 export default EmbeddingService;
 export { embeddingService };
-
